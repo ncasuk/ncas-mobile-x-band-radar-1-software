@@ -9,6 +9,3 @@ tmp/nanoc/
 # Crash Log
 crash.log
 
-calc_calib/
-apply_calc/
-convert/
