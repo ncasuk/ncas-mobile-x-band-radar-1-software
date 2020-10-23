@@ -9,7 +9,7 @@ MAX_END_DATE = '20201230'
 QUEUE = 'short-serial'
 CHUNK_SIZE = 6 # in hours
 
-LOTUS_OUTPUT = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
+LOTUS_OUTPUT_DIR = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
 
 # Radex convert params file
 PARAMS_FILE=f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.{PROJ_NAME}.uncalib'
