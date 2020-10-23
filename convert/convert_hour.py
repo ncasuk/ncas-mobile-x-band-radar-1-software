@@ -92,6 +92,7 @@ def _get_results_handler(n_facests, sep, error_types):
     else:
         raise ValueError('SETTINGS.BACKEND is not set properly')
 
+
 def loop_over_hours(args):
 
     scan_type = args.scan_type
@@ -183,6 +184,7 @@ def loop_over_hours(args):
 
             #output a success
             rh.insert_success(identifier)
+
 
 def main():
     """Runs script if called on command line"""
