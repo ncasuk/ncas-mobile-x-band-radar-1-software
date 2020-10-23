@@ -28,7 +28,7 @@ def arg_parse_day():
 def loop_over_chunks(args):
     """
     Loops through a day in hour chunks of size SETTINGS.CHUNK_SIZE and submits
-    those times to convert_raine_x_band_hour.py
+    those times to convert_hour.py
     
     :param args: (namespace) Namespace object built from attributes parsed from command line
     """

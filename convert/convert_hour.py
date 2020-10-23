@@ -29,7 +29,14 @@ def arg_parse_hour():
     return parser.parse_args()
 
 
-def map_scan_type(type):
+def _map_scan_type(type):
+    """ 
+    Converts (two way) between <> scan names and <> scan names.
+    
+    :param type: (str) Scan type in either <> or <> format
+    
+    :return: (str) Converted scan type
+    """
 
     scan_dict = {
         'vol': 'SUR',
@@ -47,6 +54,14 @@ def map_scan_type(type):
 
 
 def _get_input_files(hour, scan_type):
+    """ 
+    Finds raw input files from SETTINGS.INPUT_DIR
+
+    :param hour: (str) Hour of the data in the format YYYYMMDDHH
+    :param scan_type: (str) Type of scan, one of 'vol', 'ele', or 'azi'
+
+    :return: Sorted list of raw input file paths
+    """
 
     # Probably needs a try round it to format check
     date_dir = None
@@ -79,6 +94,16 @@ def _get_input_files(hour, scan_type):
 
 
 def _get_results_handler(n_facests, sep, error_types):
+    """ 
+    Returns a result handler which either uses a database or the file system
+    depending on the SETTING.BACKEND.
+    If using a database make sure there is an environment variable called 
+    $ABCUNIT_DB_SETTINGS which is set to "dbname=<db_name> user=<user_name> host=<host_name> password=<password>".
+    
+    :param n_facets: (int) Number of facets used to define a result.
+    :param sep: (str) Delimeter for facet separation in identifier.
+    :param error_types: (list) List of the string names of the types of errors tat can occur.
+    """
 
     if SETTINGS.BACKEND == 'db':
         constring = os.environ.get("ABCUNIT_DB_SETTINGS")
@@ -94,6 +119,11 @@ def _get_results_handler(n_facests, sep, error_types):
 
 
 def loop_over_hours(args):
+    """ 
+    Processes each file for each hour passed in the comand line arguemtns.
+    
+    :param args: (namespace) Namespace object built from attributes parsed from command line
+    """
 
     scan_type = args.scan_type
     hours = args.hours
@@ -102,7 +132,7 @@ def loop_over_hours(args):
     rh = _get_results_handler(4,'.',['bad_num', 'failure', 'bad_output'])
 
     failure_count = 0
-    mapped_scan_type = map_scan_type(scan_type)
+    mapped_scan_type = _map_scan_type(scan_type)
 
     for hour in hours:
 
