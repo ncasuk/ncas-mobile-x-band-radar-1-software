@@ -5,8 +5,8 @@ import glob
 from netCDF4 import Dataset
 import os
 # To be changed once we have exported backend
-from .output_handler.database_handler import DataBaseHandler
-from .output_handler.file_system_handler import FileSystemHandler
+from output_handler.database_handler import DataBaseHandler
+from output_handler.file_system_handler import FileSystemHandler
 # ----
 import re
 import SETTINGS
