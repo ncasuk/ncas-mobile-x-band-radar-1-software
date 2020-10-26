@@ -20,10 +20,10 @@ def arg_parse_all():
     parser.add_argument('-t', '--scan_type', nargs=1, type=str, choices=type_choices, required=True,
                         help=f'Type of scan, one of: {type_choices}', metavar='')
     parser.add_argument('-s', '--start', nargs=1, type=str, required=True, default=SETTINGS.MIN_START_DATE,
-                        help=f'Start date in the format YYYYMMDD, {SETTINGS.MIN_START_DATE} at the earliest'
+                        help=f'Start date in the format YYYYMMDD, {SETTINGS.MIN_START_DATE} at the earliest',
                         metavar='')
     parser.add_argument('-e', '--end', nargs=1, type=str, required=True, default=SETTINGS.MAX_END_DATE,
-                        help=f'End date in the format YYYYMMDD, {SETTINGS.MAX_END_DATE} at the latest'
+                        help=f'End date in the format YYYYMMDD, {SETTINGS.MAX_END_DATE} at the latest',
                         metavar='')
 
     return parser.parse_args()
@@ -44,7 +44,7 @@ def loop_over_days(args):
     try:
         start_date_time = dp.isoparse(start_date)
         end_date_time = dp.isoparse(end_date)
-    except ValueError as err:
+    except ValueError as _:
         raise ValueError('[ERROR] Date format is incorect, should be YYYYMMDD')
 
     if start_date_time > end_date_time:

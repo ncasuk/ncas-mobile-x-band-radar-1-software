@@ -18,7 +18,7 @@ def arg_parse_day():
 
     parser.add_argument('-t', '--scan_type', nargs=1, type=str, choices=type_choices, required=True,
                         help=f'Type of scan, one of: {type_choices}', metavar='')
-    parser.add_argument('-d', '--date', nargs=1, type=str, required=True
+    parser.add_argument('-d', '--date', nargs=1, type=str, required=True,
                         help=f'Date to find scans from, fromat YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     
@@ -34,11 +34,11 @@ def loop_over_chunks(args):
     """
 
     scan_type = args.scan_type
-    date = arg.date
+    date = args.date
 
     try:
         day_date_time = dp.isoparse(date)
-    except ValueError as err:
+    except ValueError as _:
         raise ValueError('[ERROR] Date format is incorect, should be YYYYMMDD')
 
     min_date = dp.isoparse(SETTINGS.MIN_START_DATE)
@@ -68,7 +68,7 @@ def loop_over_chunks(args):
 
         hours = []
 
-        for hour in [current_day_date_time + timedelta(hours=x) for x in range(SETTINGS.CHUNK_SIZE)]
+        for hour in [current_day_date_time + timedelta(hours=x) for x in range(SETTINGS.CHUNK_SIZE)]:
             hour_str = hour.strftime("%Y%m%d%H")
             hours.append(hour_str) 
 

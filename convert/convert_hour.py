@@ -4,8 +4,10 @@ import dateutil.parser as dp
 import glob
 from netCDF4 import Dataset
 import os
+# To be changed once we have exported backend
 from .output_handler.database_handler import DataBaseHandler
 from .output_handler.file_system_handler import FileSystemHandler
+# ----
 import re
 import SETTINGS
 import subprocess
@@ -25,7 +27,7 @@ def arg_parse_hour():
     # Not sure if this will work along side having a tagged parameter
     parser.add_argument('hours', nargs='+', type=str, required=True, help='The hours you want to run'
                         'in the format YYYYMMDDHH', metavar='')
-         
+
     return parser.parse_args()
 
 
@@ -67,7 +69,7 @@ def _get_input_files(hour, scan_type):
     date_dir = None
     try:
         date_dir = dp.isoparse(hour[:-2]).strftime("%Y-%m-%d")
-    except ValueError as err:
+    except ValueError as _:
         raise ValueError('[ERROR] DateHour format is incorect, should be YYYYMMDDHH')
 
     files_path = SETTINGS.INPUT_DIR
@@ -93,7 +95,7 @@ def _get_input_files(hour, scan_type):
     return sorted(set(dbz_files))
 
 
-def _get_results_handler(n_facests, sep, error_types):
+def _get_results_handler(n_facets, sep, error_types):
     """ 
     Returns a result handler which either uses a database or the file system
     depending on the SETTING.BACKEND.
@@ -141,6 +143,7 @@ def loop_over_hours(args):
         input_files = _get_input_files(hour, scan_type)
 
         year, month, day = hour[:4], hour[4:6], hour[6:8]
+        date = year + month + day
 
         for dbz_file in input_files:
 
@@ -151,8 +154,8 @@ def loop_over_hours(args):
             fname = os.path.basename(dbz_file)
             input_dir = os.path.dirname(dbz_file)
 
-            identifier = f'{year}.{month}.{day}.{os.path.splittext(fname)[0]}'
-
+            identifier = f'{year}.{month}.{day}.{os.path.splitext(fname)[0]}'
+            
             # Check if allready successful
             if rh.ran_succesfully(identifier):
                 print(f'[INFO] Already ran {dbz_file} sucessfully')
@@ -186,8 +189,8 @@ def loop_over_hours(args):
                 scan_dir_name = mapped_scan_type.lower()
 
             # This should probably be a default path that is formatted
-            expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \ 
-                            f'ncas-mobile-x-band-radar-1_sandwith_{date}-{time_digits}_{mapped_scan_type}_v1.nc
+            expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \
+                            f'ncas-mobile-x-band-radar-1_sandwith_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
 
             # Get found_vars from the .nc file 
             found_vars = None
@@ -195,7 +198,7 @@ def loop_over_hours(args):
                 ds = Dataset(expected_file, 'r', format="NETCDF4")
                 found_vars = set(ds.variables.keys())
                 ds.close()
-            except FileNotFoundError as err:
+            except FileNotFoundError as _:
                 print(f'[ERROR] Expected file {expected_file} not found')
                 rh.insert_failure(identifier, 'bad_output')
                 failure_count += 1

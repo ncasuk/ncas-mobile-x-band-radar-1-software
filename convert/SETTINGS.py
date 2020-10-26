@@ -21,7 +21,8 @@ CHUNK_SIZE = 6
 PARAMS_FILE=f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.{PROJ_NAME}.uncalib'
 
 # Where .out and .err files from LOTUS are output to
-LOTUS_OUTPUT_PATH = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}/{year}/{month}/{day}/{scan_type}'
+LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
+LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}/{scan_type}"
 
 # choice for success / failure output handling
 BACKEND = 'db' #'db' or 'file'
@@ -31,4 +32,3 @@ INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/inco
 
 # Output directory for netcdf files (specified in the params file)
 OUTPUT_DIR=f'/gws/nopw/j04/ncas_radar_vol2/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
-
