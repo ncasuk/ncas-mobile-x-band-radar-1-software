@@ -9,6 +9,5 @@ tmp/nanoc/
 # Crash Log
 crash.log
 
-#apply_calc
-#calc_calib
-#convert
+convert/test/test_lotus_out
+convert/test/test_radex_out

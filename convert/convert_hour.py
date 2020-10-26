@@ -88,9 +88,10 @@ def _get_input_files(hour, scan_type):
 
     for dr in filtered_dirs:
         target_dir = f'{dr}/{date_dir}'
-        files = os.listdir(target_dir)
-        pattern = re.compile(f"^{hour}.*dBZv.{scan_type}$")
-        dbz_files.extend([os.path.join(target_dir, fname) for fname in files if pattern.match(fname)])
+        if os.path.exists(target_dir):
+            files = os.listdir(target_dir)
+            pattern = re.compile(f"^{hour}.*dBZv.{scan_type}$")
+            dbz_files.extend([os.path.join(target_dir, fname) for fname in files if pattern.match(fname)])
 
     return sorted(set(dbz_files))
 
@@ -166,10 +167,10 @@ def loop_over_hours(args):
 
             # Get expected variables 
             fname_base = fname[:16]
-            time_digits = fname[9:14]
+            time_digits = fname[8:14]
 
             pattern = f'{input_dir}/{fname_base}*.{scan_type}'
-            expected_vars = set([os.path.splitext(name[17:])[0] for name in glob.glob(pattern)])
+            expected_vars = set([os.path.splitext(os.path.basename(name)[16:])[0] for name in glob.glob(pattern)])
 
             # 'Process the uncalibrated data' (where output is generated)
             script_cmd = f"RadxConvert -v -params {SETTINGS.PARAMS_FILE} -f {dbz_file}"
@@ -195,6 +196,8 @@ def loop_over_hours(args):
             # Get found_vars from the .nc file 
             found_vars = None
             try:
+                # MANY MORE VARIABLES ARE IN THERE THAN JUST expected_vars
+                # NEED TO FIX
                 ds = Dataset(expected_file, 'r', format="NETCDF4")
                 found_vars = set(ds.variables.keys())
                 ds.close()
@@ -206,7 +209,8 @@ def loop_over_hours(args):
 
             print('[INFO] Checking that the output variables match those in the input files')
 
-            if found_vars != expected_vars:
+            # Checking subset for now
+            if expected_vars.issubset(found_vars):
                 print('[ERROR] Output variables are not the same as input files'
                       f'{found_vars} != {expected_vars}')
                 failure_count += 1
