@@ -10,7 +10,9 @@ if not os.path.exists(os.path.join(SETTINGS.LOG_DIR,today)):
 if not os.path.exists(os.path.join(SETTINGS.LOTUS_DIR,today)):
     os.makedirs(os.path.join(SETTINGS.LOTUS_DIR,today))
 
-dates = [os.path.basename(x) for x in glob.glob(SETTINGS.DATA_DIR+'20*')]
+#dates = [os.path.basename(x) for x in glob.glob(SETTINGS.DATA_DIR+'20*')]
+dates = os.listdir(SETTINGS.DATA_DIR)]
+dates.sort()
 
 current_directory = os.getcwd()  # get current working directory
 

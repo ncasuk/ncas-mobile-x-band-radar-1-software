@@ -27,7 +27,7 @@ import calib_functions
 
 plt.switch_backend('agg')
 
-#Directory for radar data
+#Directory for input radar data
 raddir = SETTINGS.DATA_DIR
 dates = os.listdir(raddir)
 dates.sort()
