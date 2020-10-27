@@ -41,9 +41,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
     #Loop through files for a given day
     for F in range (0,len(filelist)):
-    #for F in range (203,205):
         print F
-	#print filelist[F]
         #Read file
         rad=pyart.io.read(filelist[F])
 
@@ -73,7 +71,8 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         ss = float(time[17:19])
         T[F] = hh + mm/60.0 + ss/3600.0
         daystr = time[0:4]+time[5:7]+time[8:10]
-        
+       
+        #Create string for timestamp 
         if hh<10:
             if mm<10:
                 timestr = '0' + str(int(hh)) + '0' + str(int(mm))
@@ -83,23 +82,26 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             timestr = str(int(hh)) + '0' + str(int(mm))
         else:
             timestr = str(int(hh)) + str(int(mm))
-       
+
+        #Create image filename 
         img_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
         if os.path.exists(img_name):
             continue
 
+        #Simple unfolding method for velocity profile
 	ind = v>6.0
         v2[ind] = -7.9725 - (7.9725-v[ind])
 
+        #Calculate mean values of all azimuths for each range step 
         rhv_prof = np.nanmean(rhohv,axis=0)
         uzh_prof = np.nanmean(uzh,axis=0)
         v_prof = np.nanmean(v2,axis=0)
         zdru_prof = np.nanmean(zdru,axis=0)
 
+        #Threshold the data to select regions of rain
         ind = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  v_prof <- 2))
 
         #Check if any of the data fit the criteria
-
         #If no, skip to next iteration of the loop i.e. next file
         if np.sum(ind==True)==0:
             continue
@@ -128,18 +130,22 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         #Count the number of data points
         nvals[F] = ind3-ind2+1
 
-
+        #Calculate the vertical gradient of velocity and RhoHV, to use an indications for the base of the melting layer.
 	grad_v = np.gradient(v_prof)
     	grad_rhv = np.gradient(rhv_prof)
 
+        #Finds the maximum gradient of velocity within the region extracted
 	max_grad_v_ind = np.where(grad_v==np.max(grad_v[ind3:ind3+17]))[0][0]
     	max_grad_v = grad_v[max_grad_v_ind]
     	#print 'max grad_v = ', max_grad_v, ' at height of ', rg[max_grad_v_ind]
     
+        #Finds the maximum gradient of RhoHV within the region extracted
     	min_grad_rhv_ind = np.where(grad_rhv==np.min(grad_rhv[ind3:ind3+17]))[0][0]
     	min_grad_rhv = grad_rhv[min_grad_rhv_ind]
     	#print 'max_grad_rhv = ', max_grad_rhv, 'at height of ', rg[max_grad_rhv_ind]
 	
+        #Looks to see if the gradients are large enough, either in velocity alone or a combination of velocity and RhoHV 
+        #These values were chosen after analysing a number of cases.
 	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
             np.logical_and(max_grad_v_ind > ind3, max_grad_v >0.25)):
 
@@ -150,7 +156,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             med_zdr[F] = np.median(zdru_prof[ind2:ind3])
             std_zdr[F] = np.std(zdru_prof[ind2:ind3])
 
-
+            #Make plot if user has requested them
             if plot==1:
                 print 'graph plotted' 
         	fig = plt.figure(figsize=(10,7))    
@@ -175,12 +181,12 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
                 ax4.plot(zdru_prof[ind2:ind3],rg[ind2:ind3],'bx')
                 ax4.set_ylim([0, 6])
                 ax4.set_xlabel('ZDRu')
-                if mm<10:
+                #if mm<10:
                 #   timestr = str(int(hh)) + '0' + str(int(mm))
-                    fig.suptitle(timestr)
-                else:
+                #    fig.suptitle(timestr)
+                #else:
                 #   timestr = str(int(hh)) + str(int(mm))
-                    fig.suptitle(timestr)
+                #    fig.suptitle(timestr)
            
                 #plt.tight_layout()
                 #file_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
@@ -189,11 +195,13 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
                 
                 if not os.path.exists(os.path.join(outdir,date)):
                     os.makedirs(os.path.join(outdir,date))
-    
+
+                #Plot and save figure 
                 plt.savefig(img_name,dpi=150)
                 plt.close()
                 plt.clf()
-    	    
+
+    	    #Combine the profile variables to output to text file
             data_array = np.stack([zdru_prof, rhv_prof, uzh_prof, v_prof],axis=1)
             np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
             print 'data file saved'
@@ -202,11 +210,13 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 	del zdru, rhohv, uzh, v 
 	gc.collect()
 
+    #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
     if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
 
         if not os.path.exists(outdir + date):
             os.makedirs(outdir + date)
 
+        #T2 = timestamp for file
         T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
         output = pd.DataFrame({'ZDR' : med_zdr, 'ML' : ML}, index=T2)
         output.to_csv(file)
