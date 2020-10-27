@@ -5,18 +5,17 @@ from datetime import date
 
 today = date.today().strftime("%Y-%m-%d")
 
-if not os.path.exists(os.path.join(SETTINGS.LOG_DIR,today)):
-    os.makedirs(os.path.join(SETTINGS.LOG_DIR,today))
 if not os.path.exists(os.path.join(SETTINGS.LOTUS_DIR,today)):
     os.makedirs(os.path.join(SETTINGS.LOTUS_DIR,today))
 
 #dates = [os.path.basename(x) for x in glob.glob(SETTINGS.DATA_DIR+'20*')]
-dates = os.listdir(SETTINGS.DATA_DIR)]
+dates = os.listdir(SETTINGS.DATA_DIR)
 dates.sort()
 
 current_directory = os.getcwd()  # get current working directory
-
-for day in dates[0:1]:
+dates=['20181031']
+#for day in dates[0:1]:
+for day in dates:
     print(day)
 
 # command to submit to lotus

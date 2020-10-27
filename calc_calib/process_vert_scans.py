@@ -34,6 +34,8 @@ dates.sort()
 
 #Directory for processed data
 outdir = SETTINGS.CALIB_DIR
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
 
 #Directory for logs
 logdir = SETTINGS.LOG_DIR 
@@ -52,7 +54,7 @@ if not os.path.exists(no_rain_dir):
 #Save melting layer height and zdr values to file. Save a success file. 
 
 date = sys.argv[1]
-print date
+print(date)
 plot = int(sys.argv[2])
 
 file = os.path.join(outdir, date, 'day_ml_zdr.csv')
@@ -64,9 +66,9 @@ no_rain_file = os.path.join(no_rain_dir, date+'_no_rain.txt')
 #If there is no success file and no no_rain file, then nothing has been processed, so carry on script to process the data
 
 if os.path.exists(success_file):
-    print date+"success file exists"
+    print(date+"success file exists")
 if os.path.exists(no_rain_file):
-    print date+"no_rain file exists"
+    print(date+"no_rain file exists")
 
 if not os.path.exists(success_file) and not os.path.exists(no_rain_file):
          
@@ -85,18 +87,18 @@ if not os.path.exists(success_file) and not os.path.exists(no_rain_file):
     
     #If there was less than 1mm of rain, go to the next day
     if rain < 1.0 or np.isfinite(rain)==False:
-	f=open(no_rain_file,'w')
-	f.write("")
-	f.close()
+        f=open(no_rain_file,'w')
+       	f.write("")
+       	f.close()
     #Otherwise process the day's data
     else:
         if calib_functions.process_zdr_scans(outdir,raddir,date,file,plot):       
-	    f=open(success_file,'w')
-	    f.write("")
-	    f.close()
-	    print date+' succesfully processed'		
+       	    f=open(success_file,'w')
+       	    f.write("")
+            f.close()
+            print(date+' succesfully processed')		
         else:
-	    f=open(no_rain_file,'w')
+            f=open(no_rain_file,'w')
             f.write("")
             f.close()
-            print date+'not enough data to process'	
+            print(date+'not enough data to process')

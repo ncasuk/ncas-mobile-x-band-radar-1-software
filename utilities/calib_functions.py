@@ -41,7 +41,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
     #Loop through files for a given day
     for F in range (0,len(filelist)):
-        print F
+        print(F)
         #Read file
         rad=pyart.io.read(filelist[F])
 
@@ -61,7 +61,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             v2 = copy.deepcopy(rad.fields['Vu']['data'])
 
     	except:
-            print "Couldn't load all variables"    
+            print("Couldn't load all variables")    
             continue
 
         #Create time array
@@ -112,7 +112,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         #Find starting point, lowest rain gate
         ind2 = i[0][0]
         if rg[ind2]>1.0:
-            print 'lowest point is above 1km'
+            print('lowest point is above 1km')
             continue       
  
         #Find bottom of the melting layer, i.e. top of the rain by finding gaps in the good data
@@ -158,7 +158,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
             #Make plot if user has requested them
             if plot==1:
-                print 'graph plotted' 
+                print('graph plotted')
         	fig = plt.figure(figsize=(10,7))    
                 ax1 = fig.add_subplot(141)
                 ax1.plot(rhv_prof,rg,'kx-')
@@ -204,7 +204,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
     	    #Combine the profile variables to output to text file
             data_array = np.stack([zdru_prof, rhv_prof, uzh_prof, v_prof],axis=1)
             np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
-            print 'data file saved'
+            print('data file saved')
 
 	del rad
 	del zdru, rhohv, uzh, v 
@@ -350,7 +350,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
     filelist = glob.glob(os.path.join(raddir,'*.nc'))
     filelist.sort()
     nfiles=len(filelist)
-    print nfiles
+    print(nfiles)
 
     #Extract number of rays 
     rad=pyart.io.read(filelist[0])
@@ -374,7 +374,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
     for file in range(nfiles):
     #for file in (181,):
-        print file
+        print(file)
 
         #Read file
         rad=pyart.io.read(filelist[file])
@@ -418,7 +418,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
             uphidp[ind]=np.nan
 
         except:
-            print "Couldn't load all variables"    
+            print("Couldn't load all variables")    
             continue
 
         #Calculate height of every range gate
@@ -577,7 +577,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
     	startphi_all[file,0:Tdim] = startphi
 
     	good_rays = np.sum(np.isfinite(phiest))
-    	print 'file=',file,'rays=',str(good_rays)
+       	print('file=',file,'rays=',str(good_rays))
     	del rad
     	del zdr, rhohv, kdp, phidp, uzh, uphidp
     	gc.collect()
@@ -594,9 +594,9 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
     #filename = outdir + 'good_rays'     
     #np.save(filename,good_rays)
-    print "total rays = ", np.sum(np.isfinite(phiest_all.flatten()))
+    print("total rays = ", np.sum(np.isfinite(phiest_all.flatten())))
     if np.sum(np.isfinite(phiest_all.flatten())) !=0:
-        print "phiest and phiobs values exist"
+        print("phiest and phiobs values exist")
         phiest_filename = os.path.join(outdir, 'phiest_all_' + day)
         np.save(phiest_filename,phiest_all)
         phiobs_filename = os.path.join(outdir, 'phiobs_all_' + day)
@@ -615,7 +615,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
     filelist = glob.glob(os.path.join(raddir,'*.nc'))
     filelist.sort()
     nfiles=len(filelist)
-    print nfiles
+    print(nfiles)
 
     #Extract number of rays 
     rad=pyart.io.read(filelist[0])
@@ -639,7 +639,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     for file in range(nfiles):
     #for file in (30,):
-        print file
+        print(file)
 
         #Read file
         rad=pyart.io.read(filelist[file])
@@ -683,7 +683,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
             uphidp[ind]=np.nan
 
         except:
-            print "Couldn't load all variables"    
+            print("Couldn't load all variables")    
             continue
 
         #Calculate height of every range gate
@@ -852,7 +852,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
     	startphi_all[file,0:Tdim] = startphi
 
    	good_rays = np.sum(np.isfinite(phiest_all));
-	print 'file=',file,'rays=',str(good_rays)
+	print('file=',file,'rays=',str(good_rays))
     	del rad
     	del zdr, rhohv, kdp, phidp, uzh, uphidp
     	gc.collect()
@@ -869,9 +869,9 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     #filename = outdir + 'good_rays'     
     #np.save(filename,good_rays)
-    print "total rays = ", np.sum(np.isfinite(phiest_all.flatten()))
+    print("total rays = ", np.sum(np.isfinite(phiest_all.flatten())))
     if np.sum(np.isfinite(phiest_all.flatten())) !=0:
-        print "phiest and phiobs values exist"
+        print("phiest and phiobs values exist")
         phiest_filename = os.path.join(outdir, 'phiest_all_att_' + day)
         np.save(phiest_filename,phiest_all)
         phiobs_filename = os.path.join(outdir, 'phiobs_all_att_' + day)
@@ -900,7 +900,7 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
     
     for file in range(0,nfiles):
         #print filelist[file]
-        print file
+        print(file)
         rad=pyart.io.read(filelist[file])
 
         #Create time array
@@ -946,7 +946,7 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
             ind = phidp < -180
             phidp[ind] = phidp[ind] + 360
         except:
-            print "Couldn't load all variables"    
+            print("Couldn't load all variables")    
             continue
 
         beam_height = np.empty((Tdim,Rdim))
