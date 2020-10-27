@@ -23,7 +23,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 #---------------------------------------------------------------------------------------
-#Extract ML, ZDR from vertical scans and save to day_ml_zdr.csv'
+#Extract Melting Layer and mean ZDR values from vertical scans and save to csv file'
 
 def process_zdr_scans(outdir,raddir,date,file,plot):
  
@@ -228,15 +228,17 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 #        output.to_csv(file)
 
 #---------------------------------------------------------------------------------------------
-#Calculate hourly median values of ML heights to use for Z calibration
+#Calculate hourly median values of melting layer heights to use for Z calibration
 
 def calc_hourly_ML(outdir,date):        
-   
+  
+    #Output variable 
     hourly_ml_zdr = pd.DataFrame() 
+    #Input file (full day)
     file1 = os.path.join(outdir, date, 'day_ml_zdr.csv')
+    #Output file (hourly values for each day)
     file2 = os.path.join(outdir, date, 'hourly_ml_zdr.csv')
 
-    #if os.path.exists(file1):
     data = pd.read_csv(file1,index_col=0, parse_dates=True)
 
     if data.empty==False:
@@ -251,10 +253,11 @@ def calc_hourly_ML(outdir,date):
             else:
                 end=time(hh+1,0,0)
     
-            #Find values of ML and Median ZDR between each hourly period
+            #Find values of melting layer and median ZDR between each hourly period
             ml_zdr=data[['ML','ZDR']].between_time(beg,end,include_end=False)
         
             #If there are less than 3 (out of 9) valid values, set all to NaN and continue
+            #Else calculate median value of melting layer height and ZDR
             if ml_zdr['ML'].count()<3:
                 hourly_ml[hh]=float('nan')
                 hourly_zdr[hh]=float('nan')
@@ -277,10 +280,8 @@ def calc_hourly_ML(outdir,date):
             #Construct time array for hourly medians i.e. 00:30, 01:30
             hourly_T = pd.to_datetime(date) + pd.timedelta_range('00:30:00','23:30:00',freq='1H')
             hourly_ml_zdr = pd.DataFrame({'H_ML' : hourly_ml, 'H_ZDR' : hourly_zdr}, index=hourly_T)
-            #print 'here'
         
             hourly_ml_zdr = hourly_ml_zdr.dropna()
-            #print median_ML
             hourly_ml_zdr.to_csv(file2)
         
             return True        
