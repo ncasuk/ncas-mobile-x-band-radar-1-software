@@ -16,13 +16,16 @@ class FileSystemHandler(BaseHandler):
         :param error_types: (list) List of the string names of the types of errors that can occur.
         """
 
-        self.current_dir = os.getcwd()
+        # self.current_dir = os.getcwd()
         self.error_types = error_types
         self.n_facets = n_facets
         self.sep = sep
-        self.success_dir = SETTINGS.SUCCESS_DIR.format(current_directory=self.current_dir)
-        self.failure_dir = SETTINGS.FAILURE_DIR.format(current_directory=self.current_dir)
-  
+        # self.success_dir = SETTINGS.SUCCESS_DIR.format(current_directory=self.current_dir)
+        # self.failure_dir = SETTINGS.FAILURE_DIR.format(current_directory=self.current_dir)
+        self.sucess_dir = SETTINGS.SUCCESS_DIR
+        self.failure_dir = SETTINGS.FAILURE_DIR
+
+        
     def validate(func):
         """
         Decorator to check an identifier is of the correct format

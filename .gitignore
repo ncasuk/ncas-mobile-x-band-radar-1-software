@@ -11,3 +11,4 @@ crash.log
 
 convert/test/test_lotus_out
 convert/test/test_radex_out
+convert/test/test_result_out
