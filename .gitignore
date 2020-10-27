@@ -9,6 +9,6 @@ tmp/nanoc/
 # Crash Log
 crash.log
 
-#apply_calc
-#calc_calib
-#convert
+__pycache__/
+__pycache__
+*.pyc
