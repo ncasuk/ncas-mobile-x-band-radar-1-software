@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-sys.path.append("/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/")
+sys.path.append("/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/utilities/")
 import calib_functions
 
 plt.switch_backend('agg')
@@ -31,6 +31,9 @@ plt.switch_backend('agg')
 raddir = SETTINGS.DATA_DIR
 dates = os.listdir(raddir)
 dates.sort()
+
+#Directory for weather station data
+wxdir = SETTINGS.WXDIR
 
 #Directory for processed data
 outdir = SETTINGS.CALIB_DIR
@@ -58,6 +61,7 @@ print(date)
 plot = int(sys.argv[2])
 
 file = os.path.join(outdir, date, 'day_ml_zdr.csv')
+print(file)
 
 success_file = os.path.join(success_dir, date+'_ml_zdr.txt')
 no_rain_file = os.path.join(no_rain_dir, date+'_no_rain.txt')

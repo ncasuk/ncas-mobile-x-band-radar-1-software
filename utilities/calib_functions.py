@@ -213,8 +213,8 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
     #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
     if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
 
-        if not os.path.exists(outdir + date):
-            os.makedirs(outdir + date)
+        if not os.path.exists(os.path.join(outdir,date)):
+            os.makedirs(os.path.join(outdir,date))
 
         #T2 = timestamp for file
         T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
