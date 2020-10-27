@@ -53,14 +53,14 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         rg_sp = rg[1]-rg[0]
         max_gate = rg.size
         
-	try:
-	    rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
-	    uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
+       	try:
+            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
+            uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
             zdru = copy.deepcopy(rad.fields['ZDRu']['data'])
             v = copy.deepcopy(rad.fields['Vu']['data'])
             v2 = copy.deepcopy(rad.fields['Vu']['data'])
 
-    	except:
+       	except:
             print("Couldn't load all variables")    
             continue
 
@@ -89,7 +89,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             continue
 
         #Simple unfolding method for velocity profile
-	ind = v>6.0
+       	ind = v>6.0
         v2[ind] = -7.9725 - (7.9725-v[ind])
 
         #Calculate mean values of all azimuths for each range step 
@@ -131,22 +131,22 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         nvals[F] = ind3-ind2+1
 
         #Calculate the vertical gradient of velocity and RhoHV, to use an indications for the base of the melting layer.
-	grad_v = np.gradient(v_prof)
-    	grad_rhv = np.gradient(rhv_prof)
+       	grad_v = np.gradient(v_prof)
+       	grad_rhv = np.gradient(rhv_prof)
 
         #Finds the maximum gradient of velocity within the region extracted
-	max_grad_v_ind = np.where(grad_v==np.max(grad_v[ind3:ind3+17]))[0][0]
-    	max_grad_v = grad_v[max_grad_v_ind]
-    	#print 'max grad_v = ', max_grad_v, ' at height of ', rg[max_grad_v_ind]
+       	max_grad_v_ind = np.where(grad_v==np.max(grad_v[ind3:ind3+17]))[0][0]
+       	max_grad_v = grad_v[max_grad_v_ind]
+       	#print 'max grad_v = ', max_grad_v, ' at height of ', rg[max_grad_v_ind]
     
         #Finds the maximum gradient of RhoHV within the region extracted
-    	min_grad_rhv_ind = np.where(grad_rhv==np.min(grad_rhv[ind3:ind3+17]))[0][0]
-    	min_grad_rhv = grad_rhv[min_grad_rhv_ind]
+       	min_grad_rhv_ind = np.where(grad_rhv==np.min(grad_rhv[ind3:ind3+17]))[0][0]
+       	min_grad_rhv = grad_rhv[min_grad_rhv_ind]
     	#print 'max_grad_rhv = ', max_grad_rhv, 'at height of ', rg[max_grad_rhv_ind]
 	
         #Looks to see if the gradients are large enough, either in velocity alone or a combination of velocity and RhoHV 
         #These values were chosen after analysing a number of cases.
-	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
+       	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
             np.logical_and(max_grad_v_ind > ind3, max_grad_v >0.25)):
 
             #Define Melting Level height as the height at the top of the valid data i.e. first rain point 
@@ -159,7 +159,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             #Make plot if user has requested them
             if plot==1:
                 print('graph plotted')
-        	fig = plt.figure(figsize=(10,7))    
+               	fig = plt.figure(figsize=(10,7))    
                 ax1 = fig.add_subplot(141)
                 ax1.plot(rhv_prof,rg,'kx-')
                 ax1.plot(rhv_prof[ind2:ind3],rg[ind2:ind3],'bx')
@@ -206,9 +206,9 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
             print('data file saved')
 
-	del rad
-	del zdru, rhohv, uzh, v 
-	gc.collect()
+       	del rad
+       	del zdru, rhohv, uzh, v 
+       	gc.collect()
 
     #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
     if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
@@ -220,10 +220,10 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
         output = pd.DataFrame({'ZDR' : med_zdr, 'ML' : ML}, index=T2)
         output.to_csv(file)
-	return True
+        return True
 
     else:
-	return False
+       	return False
 #        output = pd.DataFrame()
 #        output.to_csv(file)
 
@@ -412,7 +412,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
             ind = phidp < -180
             phidp[ind] = phidp[ind] + 360
 
-	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
+       	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
             #Set invalid values (-9e33) to nans
             ind = uphidp.mask==True
             uphidp[ind]=np.nan
@@ -472,12 +472,12 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
     	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
         #chilbolton
-    	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],
                                   rad.azimuth['data']<azi[1]],axis=0) for ele, azi in exclusions],axis=0)
-	az_index = np.where(~exclude_radials)[0]
+       	az_index = np.where(~exclude_radials)[0]
 
         for i in az_index:
 
@@ -572,15 +572,15 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
         #delta is a function of ray, delta(nrays)
         #delta_all is a function of volume and ray, delta_all(nvols,nrays)
 
-    	phiobs_all[file,0:Tdim] = phiobs
-    	phiest_all[file,0:Tdim] = phiest
-    	startphi_all[file,0:Tdim] = startphi
+       	phiobs_all[file,0:Tdim] = phiobs
+       	phiest_all[file,0:Tdim] = phiest
+       	startphi_all[file,0:Tdim] = startphi
 
-    	good_rays = np.sum(np.isfinite(phiest))
+       	good_rays = np.sum(np.isfinite(phiest))
        	print('file=',file,'rays=',str(good_rays))
-    	del rad
-    	del zdr, rhohv, kdp, phidp, uzh, uphidp
-    	gc.collect()
+       	del rad
+       	del zdr, rhohv, kdp, phidp, uzh, uphidp
+       	gc.collect()
                     
         #print phiobs.shape   
         #delta = ((phiest-phiobs)/phiobs)*100
@@ -677,7 +677,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
             ind = phidp < -180
             phidp[ind] = phidp[ind] + 360
 
-	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
+       	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
             #Set invalid values (-9e33) to nans
             ind = uphidp.mask==True
             uphidp[ind]=np.nan
@@ -737,13 +737,13 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     	# raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
     	#chilbolton 080620_att exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
-    	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,0.6),(0,360)),((0.6,1.01),(190,211)),((0.6,1.01),(324,335))]
+       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,0.6),(0,360)),((0.6,1.01),(190,211)),((0.6,1.01),(324,335))]
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],
                                   rad.azimuth['data']<azi[1]],axis=0) for ele, azi in exclusions],axis=0)
 
-	az_index = np.where(~exclude_radials)[0]
+       	az_index = np.where(~exclude_radials)[0]
 
         for i in az_index:
         #for i in (778,):
@@ -847,15 +847,15 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
         #delta is a function of ray, delta(nrays)
         #delta_all is a function of volume and ray, delta_all(nvols,nrays)
 
-    	phiobs_all[file,0:Tdim] = phiobs
-    	phiest_all[file,0:Tdim] = phiest
-    	startphi_all[file,0:Tdim] = startphi
+       	phiobs_all[file,0:Tdim] = phiobs
+       	phiest_all[file,0:Tdim] = phiest
+       	startphi_all[file,0:Tdim] = startphi
 
-   	good_rays = np.sum(np.isfinite(phiest_all));
-	print('file=',file,'rays=',str(good_rays))
-    	del rad
-    	del zdr, rhohv, kdp, phidp, uzh, uphidp
-    	gc.collect()
+       	good_rays = np.sum(np.isfinite(phiest_all));
+       	print('file=',file,'rays=',str(good_rays))
+       	del rad
+       	del zdr, rhohv, kdp, phidp, uzh, uphidp
+       	gc.collect()
                     
         #print phiobs.shape   
         #delta = ((phiest-phiobs)/phiobs)*100
@@ -910,7 +910,7 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
         ss = float(time[17:19])
 #        T[file] = hh + mm/60.0 + ss/3600.0
 
-	T_arr.append(time)
+       	T_arr.append(time)
 
         #Extract dimensions
         Rdim = rad.ngates
@@ -919,12 +919,12 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
         Adim = Tdim/Edim
         
    	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
-    	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],
                                   rad.azimuth['data']<azi[1]],axis=0) for ele, azi in exclusions],axis=0)
-	az_index = np.where(~exclude_radials)[0]
+       	az_index = np.where(~exclude_radials)[0]
 
         #Extract data
         try:
@@ -974,7 +974,7 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
 #           stdZDR18[file] = np.nanstd(zdr[ind==True])
             medZDR18[file] = np.nanmedian(zdr[ind==True])
 
-	del rad
+       	del rad
         del zdr, rhohv, uzh, phidp
         gc.collect()
     
