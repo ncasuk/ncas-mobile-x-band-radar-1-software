@@ -40,7 +40,7 @@ def moving_average(data, size):
         # Normal condition
         if ran >= size:
             window = data[:, ran - size:ran + size]
-	    out[:, ran] = np.ma.average(window,
+       	    out[:, ran] = np.ma.average(window,
                                         axis=1)
             out[:, ran] = np.where(out[:, ran].mask == True,
                                    np.nan,
@@ -132,10 +132,10 @@ def smooth(x,window_len=11,window='hanning'):
     """
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError("smooth only accepts 1 dimension arrays.")
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError("Input vector needs to be bigger than window size.")
 
 
     if window_len<3:
@@ -143,7 +143,7 @@ def smooth(x,window_len=11,window='hanning'):
 
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
 
     s=np.r_[x[window_len-1:0:-1],x,x[-2:-window_len-1:-1]]
@@ -181,7 +181,7 @@ def extract_phase(zdrdir,datadir,date,outdir):
         all_phase = []
         time = []
         for file in rain_index[0:10]:
-            print filelist[file]
+            print(filelist[file])
             rad=pyart.io.read(filelist[file],delay_field_loading=True)                
             try:
                 IP = pyart.correct.phase_proc.det_sys_phase(rad, ncp_lev=0.4, rhohv_lev=0.6, ncp_field='SQI', rhv_field='RhoHV', phidp_field='uPhiDP')
@@ -189,7 +189,7 @@ def extract_phase(zdrdir,datadir,date,outdir):
                 time_of_file = filelist[file][120:135]
                 time.append(time_of_file)                
             except:
-                print date, 'no uphidp'
+                print(date, 'no uphidp')
                 return False
 
     pdtime = pd.to_datetime(time,format = '%Y%m%d-%H%M%S')
