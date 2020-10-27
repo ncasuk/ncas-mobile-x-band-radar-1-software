@@ -351,10 +351,10 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
     filelist.sort()
     nfiles=len(filelist)
     print nfiles
-    #chilbolton 
-    ss=4680
-    #raine 10 elevations: 0.5, 1, 1.5, 2, 3, 4.5, 6, 7.5, 10, 20 
-    #ss=3600
+
+    #Extract number of rays 
+    rad=pyart.io.read(filelist[0])
+    ss = rad.nrays
 
     #create empty array for calibration offsets
     delta_all=np.zeros((nfiles,ss))*np.nan
@@ -426,13 +426,11 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
         for j in np.arange(0,Edim):
             for i in np.arange(0,Adim):
                 beam_height[(360*j)+i,:] = radh/1000 + np.sin(np.deg2rad(el[j]))*rg + np.sqrt(rg**2 + (6371*4/3.0)**2) - (6371*4/3.0);
-
+        #Extract melting layer height and ZDR bias for current file time
         mlh, zdr_bias = extract_ml_zdr(time, ml_zdr)
 
         zind = beam_height > mlh   
         uzh[zind==True] = np.nan
-        #zind = beam_height < 0.5    
-        #uzh[zind==True] = np.nan
 
         zdr[zind==True] = np.nan
         phidp[zind==True] = np.nan
@@ -440,7 +438,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
         kdp[zind==True] = np.nan
         rhohv[zind==True] = np.nan
 
-#       Remove first 2km of data
+        #Remove first 2km of data
         n=13
         uzh = uzh[:,n:]
         zdr = zdr[:,n:]
@@ -457,15 +455,23 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
 #        c=0
 
-# Exclusions is a list of tuples (), where each tuple is a pair of tuples.
-# The first tuple of each pair is the start and stop elevation of the segment to exclude
-# and the second tuple contains the start and stop azimuth of the segment to exclude.
-# This "one-liner" builds a generator from the list of tuples so each tuple defines a binary array which is True
-# where the segment occurs and false elsewhere. All conditions must be met, so between start and stop in both
-# azimuth and elevation. These are then combined to a single array using np.any to create a single exclude binary array which is True where
-# any of the segments are found and False in non-excluded places
+# Exclusions is a list of tuples (), where each tuple is a pair of 
+# tuples. 
+# The first tuple of each pair is the start and stop elevation of the 
+# segment to exclude.
+# The second tuple contains the start and stop azimuth of the segment 
+# to exclude.
+# This "one-liner" builds a generator from the list of tuples so each 
+# tuple defines a binary array which is True where the segment occurs 
+# and false elsewhere. 
+# All conditions must be met, so between start and stop in both azimuth 
+# and elevation. 
+# These are then combined to a single array using np.any to create a 
+# single exclude binary array which is True where any of the segments 
+# are found and False in non-excluded places
 
     	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
+        #chilbolton
     	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
@@ -475,7 +481,6 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
         for i in az_index:
 
-
             #Extract ray
             phidp_f1 = phidp[i,:]
             uphidp_f = uphidp[i,:]
@@ -483,15 +488,9 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
             uzh_f = uzh[i,:]
             zdr_f = zdr[i,:] - zdr_bias
             rhohv_f = rhohv[i,:]
-#
-#
-#
+
             phidp_f = phidp_f1 - phidp_f1[0]
-#
-#
-#
-#
-#
+
             #Check for all-nan array, go to next iteration of loop if so
             if np.sum(np.isfinite(phidp_f)==True)==0:
                 continue
@@ -502,7 +501,7 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
                 phi1 = phi1_valid[0]
             else:
                 continue
-#            #Find indices where PhiDP is between 4 and 6 degs    
+            #Find indices where PhiDP is between 4 and 6 degs    
             ind = np.where(np.logical_and(phidp_f > 4, phidp_f < 6))[0]
 
             #If values exist, 
@@ -512,8 +511,6 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
                 #print '1. index and value of maximum phidp_f between 4&6=', ib, phidp_f[ib]
 
                 pdpmax = phidp_f[ib]
-#                path_len = (np.sum(np.isfinite(uzh_f[0:ib+1])==True))*rg_sp
-#                path_len = (np.sum(np.isfinite(uzh_f[phi1:ib+1])==True))*rg_sp
                 path_len = rg[ib]
                 #print '2. maxmimum phidp=', pdpmax, 'Path length=', path_len
 
@@ -570,10 +567,10 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
                             phiest[i] = tmpphi[ib]
                             #phiest[i] = tmpphi[ib-phi1]
 
-        #phiest is a function of ray, phiest(4320)
-        #phiest_all is a function of volume and ray, phiest_all(289,4320)
-        #delta is a function of ray, delta(4320)
-        #delta_all is a function of volume and ray, delta_all(289,4320)
+        #phiest is a function of ray, phiest(nrays)
+        #phiest_all is a function of volume and ray, phiest_all(nvols,nrays)
+        #delta is a function of ray, delta(nrays)
+        #delta_all is a function of volume and ray, delta_all(nvols,nrays)
 
     	phiobs_all[file,0:Tdim] = phiobs
     	phiest_all[file,0:Tdim] = phiest
