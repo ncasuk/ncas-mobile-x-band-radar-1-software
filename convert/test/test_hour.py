@@ -1,11 +1,11 @@
 from argparse import Namespace
-import convert_hour
+from convert import convert_hour
 import os
 import pytest
 import subprocess
-import SETTINGS
+from convert import SETTINGS
 
-def test_radexconvert():
+def test_RadxConvert():
     # Could maybe check more in-depth into netcfd output
     example_file = f'{SETTINGS.INPUT_DIR}/sandwith01_data.vol/2020-04-07/2020040713415800dBZv.vol'
     cmd = f'RadxConvert -v -params {SETTINGS.PARAMS_FILE} -f {example_file}'
@@ -13,7 +13,8 @@ def test_radexconvert():
 
     example_expected = f'{SETTINGS.OUTPUT_DIR}/sur/20200407/ncas-mobile-x-band-radar-1_sandwith_20200407-134158_SUR_v1.nc'
 
-    assert(return_code == 0 && os.path.exists(example_expected))
+    assert(return_code == 0)
+    assert(os.path.exists(example_expected))
 
 def test_output_one_hour():
     example_hour = '2020040705'
@@ -43,16 +44,9 @@ def test_output_one_hour():
                               '2020040705224400dBZv.vol', '2020040705284000dBZv.vol', '2020040705344900dBZv.vol'
                               '2020040705404200dBZv.vol', '2020040705463700dBZv.vol', '2020040705523200dBZv.vol'
                               '2020040705582800dBZv.vol']
-    checks = []
 
     for fname in example_expected_files:
         expected_path = f'{SETTINGS.OUTPUT_DIR}/sur/20200407/' \
                         f'ncas-mobile-x-band-radar-1_sandwith_20200407-{fname[8:14]}_SUR_v1.nc'
-        checks.append(os.path.exists(expected_path))
-
-    assert(all(checks))
-
-
-
-
+        assert(os.path.exists(expected_path))
 

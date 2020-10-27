@@ -2,7 +2,7 @@ import glob
 import os
 import functools
 from .base_handler import BaseHandler
-import SETTINGS
+from convert import SETTINGS
 
 
 class FileSystemHandler(BaseHandler):
@@ -22,7 +22,7 @@ class FileSystemHandler(BaseHandler):
         self.sep = sep
         # self.success_dir = SETTINGS.SUCCESS_DIR.format(current_directory=self.current_dir)
         # self.failure_dir = SETTINGS.FAILURE_DIR.format(current_directory=self.current_dir)
-        self.sucess_dir = SETTINGS.SUCCESS_DIR
+        self.success_dir = SETTINGS.SUCCESS_DIR
         self.failure_dir = SETTINGS.FAILURE_DIR
 
         

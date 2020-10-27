@@ -5,11 +5,11 @@ import glob
 from netCDF4 import Dataset
 import os
 # To be changed once we have exported backend
-from output_handler.database_handler import DataBaseHandler
-from output_handler.file_system_handler import FileSystemHandler
+from .output_handler.database_handler import DataBaseHandler
+from .output_handler.file_system_handler import FileSystemHandler
 # ----
 import re
-import SETTINGS
+from . import SETTINGS
 import subprocess
 
 def arg_parse_hour():
@@ -76,12 +76,14 @@ def _get_input_files(hour, scan_type):
     # They're all dirs but feels good to check
     dirs = [name for name in os.listdir(files_path) if os.path.isdir(os.path.join(files_path, name))]
 
-    if scan_type == 'vol':
+    """ if scan_type == 'vol':
         pattern = re.compile(f"^{SETTINGS.PROJ_NAME}.*_.*.vol$")
     elif scan_type == 'ele':
         pattern = re.compile(f"^{SETTINGS.PROJ_NAME}_.*.ele$")
     elif scan_type == 'azi':
-        pattern = re.compile(f"^{SETTINGS.PROJ_NAME}.*.azi$")
+        pattern = re.compile(f"^{SETTINGS.PROJ_NAME}.*.azi$") """
+
+    pattern = re.compile(f"^.*\.{scan_type}$")
 
     filtered_dirs = [os.path.join(files_path, name) for name in dirs if pattern.match(name)]
     dbz_files = []
@@ -210,7 +212,7 @@ def loop_over_hours(args):
             print('[INFO] Checking that the output variables match those in the input files')
 
             # Checking subset for now
-            if expected_vars.issubset(found_vars):
+            if not expected_vars.issubset(found_vars):
                 print('[ERROR] Output variables are not the same as input files'
                       f'{found_vars} != {expected_vars}')
                 failure_count += 1

@@ -29,7 +29,7 @@ LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-b
 LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}/{scan_type}"
 
 # choice for success / failure output handling
-BACKEND = 'db' #'db' or 'file'
+BACKEND = 'file' #'db' or 'file'
 
 SUCCESS_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out/success'
 FAILURE_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out/failure'
