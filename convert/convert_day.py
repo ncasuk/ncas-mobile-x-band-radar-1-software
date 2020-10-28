@@ -76,7 +76,12 @@ def loop_over_chunks(args):
 
         hour_range = hours[0][-2:] + '-' + hours[-1][-2:]
         output_base = SETTINGS.LOTUS_OUTPUT_PATH.format(year=day_date_time.year, month=day_date_time.month,
-                                                        day=day_date_time.day, hours=hour_range, scan_type=scan_type)
+                                                        day=day_date_time.day)
+
+        if not os.path.exists(output_base):
+            os.makedirs(output_base)
+
+        output_base += f'/{hour_range}-{scan_type}'
 
         slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {wallclock} -o {output_base}.out " \
                         f"-e {output_base}.err {script_directory}/convert_hour.py " \

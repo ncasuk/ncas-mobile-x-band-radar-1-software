@@ -26,7 +26,7 @@ PARAMS_FILE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1
 # LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
 # WHILE TESTING
 LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_lotus_out'
-LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}/{hours}-{scan_type}"
+LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 
 # choice for success / failure output handling
 BACKEND = 'file' #'db' or 'file'
