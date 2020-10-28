@@ -149,6 +149,10 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
        	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
             np.logical_and(max_grad_v_ind > ind3, max_grad_v >0.25)):
 
+            #If profile data is extracted create output directory for this date
+            if not os.path.exists(os.path.join(outdir,date)):
+                os.makedirs(os.path.join(outdir,date))
+
             #Define Melting Level height as the height at the top of the valid data i.e. first rain point 
             #Need to add on radar height to get height above sea level
             fileindex[F] = F
@@ -193,8 +197,6 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
                 #print file_name
                 #file_path = os.path.join(outdir,date,file_name)
                 
-                if not os.path.exists(os.path.join(outdir,date)):
-                    os.makedirs(os.path.join(outdir,date))
 
                 #Plot and save figure 
                 plt.savefig(img_name,dpi=150)
