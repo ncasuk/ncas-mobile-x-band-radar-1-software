@@ -3,7 +3,7 @@ from datetime import timedelta
 import dateutil
 import dateutil.parser as dp
 import os
-import SETTINGS
+from . import SETTINGS
 import subprocess
 
 def arg_parse_all():
@@ -36,9 +36,9 @@ def loop_over_days(args):
     """
 
     # import pdb; pdb.set_trace(), or add breakpoint if doesn't work
-    scan_type = args.scan_type
-    start_date = args.start
-    end_date = args.end
+    scan_type = args.scan_type[0]
+    start_date = args.start[0]
+    end_date = args.end[0]
 
     #validate dates
     try:

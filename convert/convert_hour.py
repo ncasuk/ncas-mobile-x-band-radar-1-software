@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 import dateutil
 import dateutil.parser as dp
@@ -5,11 +7,11 @@ import glob
 from netCDF4 import Dataset
 import os
 # To be changed once we have exported backend
-from .output_handler.database_handler import DataBaseHandler
-from .output_handler.file_system_handler import FileSystemHandler
+from output_handler.database_handler import DataBaseHandler
+from output_handler.file_system_handler import FileSystemHandler
 # ----
 import re
-from . import SETTINGS
+import SETTINGS
 import subprocess
 
 def arg_parse_hour():
@@ -25,7 +27,7 @@ def arg_parse_hour():
     parser.add_argument('-t', '--scan_type',  nargs=1, type=str, choices=type_choices, required=True,
                         help=f'Type of scan, one of: {type_choices}', metavar='')
     # Not sure if this will work along side having a tagged parameter
-    parser.add_argument('hours', nargs='+', type=str, required=True, help='The hours you want to run'
+    parser.add_argument('hours', nargs='+', type=str, help='The hours you want to run'
                         'in the format YYYYMMDDHH', metavar='')
 
     return parser.parse_args()
@@ -130,7 +132,7 @@ def loop_over_hours(args):
     :param args: (namespace) Namespace object built from attributes parsed from command line
     """
 
-    scan_type = args.scan_type
+    scan_type = args.scan_type[0]
     hours = args.hours
     
     # THIS IS ALL TO CHANGE

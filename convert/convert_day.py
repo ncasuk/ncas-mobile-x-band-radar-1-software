@@ -33,8 +33,8 @@ def loop_over_chunks(args):
     :param args: (namespace) Namespace object built from attributes parsed from command line
     """
 
-    scan_type = args.scan_type
-    date = args.date
+    scan_type = args.scan_type[0]
+    date = args.date[0]
 
     try:
         day_date_time = dp.isoparse(date)
@@ -55,15 +55,10 @@ def loop_over_chunks(args):
     if n_chunks < 1:
         raise ValueError('SETTINGS.CHUNK_SIZE must be 24 or less')
 
-    output_base = SETTINGS.LOTUS_OUTPUT_PATH.format(year=day_date_time.year, month=day_date_time.month,
-                                                    day=day_date_time.day, scan_type=scan_type)
-
     start_day = day_date_time.day
     current_day_date_time = day_date_time
     script_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # We could work out exactly how many time through this loop we need to go,
-    # that might be nice than a while
     while current_day_date_time.day == start_day: 
 
         hours = []
@@ -75,9 +70,13 @@ def loop_over_chunks(args):
         current_day_date_time += timedelta(hours=SETTINGS.CHUNK_SIZE)
 
         print(f"[INFO] Running for {hours}")
-        # Hopefully doesn't put a '.0'
-        # Also if its a single digit maybe it needs a 0 on the front
-        wallclock = f"{SETTINGS.CHUNK_SIZE / 2}:00" 
+
+        formatted_time = '{:02.0f}'.format(SETTINGS.CHUNK_SIZE / 2)
+        wallclock = f"{formatted_time}:00"
+
+        hour_range = hours[0][-2:] + '-' + hours[-1][-2:]
+        output_base = SETTINGS.LOTUS_OUTPUT_PATH.format(year=day_date_time.year, month=day_date_time.month,
+                                                        day=day_date_time.day, hours=hour_range, scan_type=scan_type)
 
         slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {wallclock} -o {output_base}.out " \
                         f"-e {output_base}.err {script_directory}/convert_hour.py " \
