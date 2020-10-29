@@ -1,15 +1,9 @@
 import warnings
 import numpy as np
-from datetime import date
-from datetime import time
-from datetime import timedelta
 import pandas as pd
-
-import gc
-import copy
 import os
-import scipy as scipy
-import sys
+import argparse
+import dateutil.parser as dp
 import SETTINGS
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
@@ -28,7 +22,7 @@ def arg_parse_day():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-d', '--date', nargs='1', required=True, type=str, 
+    parser.add_argument('-d', '--date', nargs=1, required=True, type=str, 
                         help=f'Date string with format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
@@ -38,8 +32,14 @@ def arg_parse_day():
 
 def process_vert_scans(args):
 
-    plot=args.plot
-    day=args.date
+    """ 
+    Processes all vertical scans for given day to extract values of ZDR bias and melting layer height
+    
+    :param args: (namespace) Namespace object built from arguments parsed from command line
+    """
+
+    plot=args.make_plots[0]
+    day=args.date[0]
     day_dt = dp.parse(day)
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
@@ -74,8 +74,8 @@ def process_vert_scans(args):
     #If yes, then process the vertical scans to calculate a value of ZDR and an estimate of the height of the melting layer. 
     #Save melting layer height and zdr values to file. Save a success file. 
     
-    outfile = os.path.join(outdir, day, 'day_ml_zdr.csv')
-    print(outfile)
+    file = os.path.join(outdir, day, 'day_ml_zdr.csv')
+    print(file)
     
     success_file = os.path.join(success_dir, day+'_ml_zdr.txt')
     no_rain_file = os.path.join(no_rain_dir, day+'_no_rain.txt')
@@ -105,13 +105,13 @@ def process_vert_scans(args):
         #If there was less than 1mm of rain, go to the next day
         if rain < 1.0 or np.isfinite(rain)==False:
             f=open(no_rain_file,'w')
-           	f.write("")
-           	f.close()
+            f.write("")
+            f.close()
         #Otherwise process the day's data
         else:
             if calib_functions.process_zdr_scans(outdir,raddir,day,file,plot):       
-           	    f=open(success_file,'w')
-           	    f.write("")
+                f=open(success_file,'w')
+                f.write("")
                 f.close()
                 print(day+' succesfully processed')		
             else:
