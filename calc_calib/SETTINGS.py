@@ -2,6 +2,10 @@ QUEUE='short-serial'
 WALLCLOCK = '01:00:00'
 PROJ_NAME = 'raine'
 
+# Range in which there is data for the project
+MIN_START_DATE = '20181001'
+MAX_END_DATE = '20210331'
+
 #Location for output files
 LOG_DIR = '/gws/smf/j04/ncas_radar/lbennett/logs/'+PROJ_NAME+'/cals/'
 SUCCESS_DIR = LOG_DIR+'success/'
