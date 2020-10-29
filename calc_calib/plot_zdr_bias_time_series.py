@@ -32,11 +32,11 @@ def arg_parse():
     parser = argparse.ArgumentParser()
 #    type_choices = ['vol','ele','azi']
 
-    parser.add_argument('-s', '--start_date', nargs=1, type=str, 
-                        help=f'Start date string in format YYYYMMDD, between '
+    parser.add_argument('-s', '--start_date', nargs='?', default=SETTINGS.MIN_START_DATE, 
+                        type=str, help=f'Start date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
-    parser.add_argument('-e', '--end_date', nargs=1, type=str,
-                        help=f'End date string in format YYYYMMDD, between '
+    parser.add_argument('-e', '--end_date', nargs='?', default=SETTINGS.MAX_END_DATE,
+                        type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     
     return parser.parse_args()
@@ -50,12 +50,18 @@ def plot_zdr(args):
     parsed from command line
     """
 
-    start_date = args.start_date[0]
-    end_date = args.end_date[0]
-    
-    sdate_dt = dp.parse(start_date) 
-    edate_dt = dp.parse(end_date) 
-    
+    start_date = args.start_date
+    end_date = args.end_date
+
+    start_date_dt = dp.parse(start_date) 
+    end_date_dt = dp.parse(end_date) 
+  
+    min_date = dp.parse(SETTINGS.MIN_START_DATE)
+    max_date = dp.parse(SETTINGS.MAX_END_DATE)
+ 
+    if start_date_dt < min_date or end_date_dt > max_date:
+        raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
+
     outdir = SETTINGS.CALIB_DIR
     
     all_hourly_data=pd.DataFrame()
@@ -67,7 +73,7 @@ def plot_zdr(args):
     
     for date in proc_dates:
         date_dt=dp.parse(date);
-        if date_dt >= sdate_dt and date_dt <= edate_dt:
+        if date_dt >= start_date_dt and date_dt <= end_date_dt:
     
             file1 = os.path.join(outdir,date,'day_ml_zdr.csv')
             file2 = os.path.join(outdir,date,'hourly_ml_zdr.csv')
@@ -98,7 +104,7 @@ def plot_zdr(args):
     plt.ylabel('ZDR Bias (dB)', fontsize=18)
     plt.xlabel('Date', fontsize=18)
     
-    plt.xlim([sdate_dt,edate_dt])
+    plt.xlim([start_date_dt,end_date_dt])
     
     monthyearFmt = mdates.DateFormatter('%d-%m-%y')
     ax1.xaxis.set_major_formatter(monthyearFmt)
