@@ -21,7 +21,7 @@ def arg_parse_all():
                         help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
-                        help=f'Make plots of average profiles',metavar='')
+                        help=f'Make plots of the profiles if p is set to 1',metavar='')
     
     return parser.parse_args()
 
