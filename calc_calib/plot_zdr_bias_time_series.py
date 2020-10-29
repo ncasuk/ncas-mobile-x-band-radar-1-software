@@ -30,7 +30,6 @@ def arg_parse():
     """
 
     parser = argparse.ArgumentParser()
-#    type_choices = ['vol','ele','azi']
 
     parser.add_argument('-s', '--start_date', nargs='?', default=SETTINGS.MIN_START_DATE, 
                         type=str, help=f'Start date string in format YYYYMMDD, between '
