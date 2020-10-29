@@ -9,9 +9,7 @@ import argparse
 
 import warnings
 import glob
-import gc
 import os
-import sys
 import re
 import SETTINGS
 
