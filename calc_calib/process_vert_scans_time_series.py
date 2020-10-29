@@ -20,6 +20,8 @@ def arg_parse_all():
                         default=SETTINGS.MAX_END_DATE,type=str, 
                         help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
+    parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
+                        help=f'Make plots of average profiles',metavar='')
     
     return parser.parse_args()
 
@@ -38,6 +40,7 @@ def loop_over_days()
 
     start_date = args.start_date
     end_date = args.end_date
+    plot = args.plot
 
     start_date_dt = dp.parse(start_date) 
     end_date_dt = dp.parse(end_date) 
@@ -62,7 +65,7 @@ def loop_over_days()
     # command to submit to lotus
         sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
                            f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
-                           f"--wrap=\"python {current_directory}/process_vert_scans_day.py {day} {SETTINGS.PLOT}\""
+                           f"--wrap=\"python {current_directory}/process_vert_scans_day.py {day} {plot}\""
     
         #subprocess.call(sbatch_command, shell=True)
     

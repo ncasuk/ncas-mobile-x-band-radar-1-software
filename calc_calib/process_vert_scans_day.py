@@ -1,15 +1,10 @@
 import warnings
-import pyart
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticks 
 from datetime import date
 from datetime import time
 from datetime import timedelta
 import pandas as pd
 
-import glob
 import gc
 import copy
 import os
@@ -22,10 +17,33 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-sys.path.append("/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/utilities/")
-import calib_functions
+import utilities
+from utilities import calib_functions
 
-plt.switch_backend('agg')
+def arg_parse_day():
+    """
+    Parses arguments given at the command line
+    :return: Namespace object built from attributes parsed from command line.
+    """
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-d', '--date', nargs='1', required=True, type=str, 
+                        help=f'Date string with format YYYYMMDD, between '
+                        f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
+    
+    return parser.parse_args()
+
+def process_vert_scans():
+
+    day=args.date
+    day_dt = dp.parse(day)
+
+    min_date = dp.parse(SETTINGS.MIN_START_DATE)
+    max_date = dp.parse(SETTINGS.MAX_END_DATE)
+
+    if day_dt < min_date or day_dt > max_date:
+        raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
 #Directory for input radar data
 raddir = SETTINGS.DATA_DIR
@@ -52,7 +70,7 @@ if not os.path.exists(success_dir):
 if not os.path.exists(no_rain_dir):
     os.makedirs(no_rain_dir)
 
-#For each day of radar data, look to see if rain was observed by the weather station at the site. 
+#For given day of radar data, look to see if rain was observed by the weather station at the site. 
 #If yes, then process the vertical scans to calculate a value of ZDR and an estimate of the height of the melting layer. 
 #Save melting layer height and zdr values to file. Save a success file. 
 

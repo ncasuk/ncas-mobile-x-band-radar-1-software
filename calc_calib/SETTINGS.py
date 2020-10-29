@@ -23,5 +23,3 @@ CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations
 #Location of weather station text files with daily rain amounts
 WXDIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-aws-2/incoming/'+PROJ_NAME+'/NOAA/'
 
-#Set this to 0 or 1. Script for processing vertical scans will make plots if set to 1. Set to 0 otherwise.
-PLOT = 0 
