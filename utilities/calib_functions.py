@@ -7,7 +7,7 @@ from datetime import date
 from datetime import time
 from datetime import timedelta
 import pandas as pd
-from functions import moving_average
+#from functions import moving_average
 
 import warnings
 import glob

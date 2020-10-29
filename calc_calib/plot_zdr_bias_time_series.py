@@ -12,6 +12,19 @@ import glob
 import gc
 import os
 import sys
+import re
+import SETTINGS
+
+import utilities
+from utilities import calib_functions
+
+plt.switch_backend('agg')
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+
+
+
 
 start_date = str(sys.argv[1])
 end_date = str(sys.argv[2])
@@ -19,26 +32,14 @@ end_date = str(sys.argv[2])
 sdate_dt = dp.parse(start_date) 
 edate_dt = dp.parse(end_date) 
 
-sys.path.append("/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/utilities/")
-
-import calib_functions
-import SETTINGS
-
-plt.switch_backend('agg')
-
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
-warnings.filterwarnings("ignore", category=RuntimeWarning)
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
-
 outdir = SETTINGS.CALIB_DIR
-
-proc_dates = [os.path.basename(x) for x in glob.glob(outdir+'[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')]
-proc_dates_np = np.array(proc_dates)
-
-#ind = np.where((proc_dates_np >= start_date_dt) & (proc_dates_np <= end_date_dt))
 
 all_hourly_data=pd.DataFrame()
 all_data=pd.DataFrame()
+
+pattern = re.compile(r'(\d{8})')
+proc_dates = [x for x in os.listdir(outdir) if pattern.match(x)]
+proc_dates.sort()
 
 for date in proc_dates:
     date_dt=dp.parse(date);
