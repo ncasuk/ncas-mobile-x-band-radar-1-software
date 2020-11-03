@@ -10,6 +10,7 @@ MAX_END_DATE = '20210331'
 LOG_DIR = '/gws/smf/j04/ncas_radar/lbennett/logs/'+PROJ_NAME+'/cals/'
 SUCCESS_DIR = LOG_DIR+'success/'
 NO_RAIN_DIR = LOG_DIR+'no_rain/'
+NO_RAYS_DIR = LOG_DIR+'no_rays/'
 
 #Location for LOTUS output
 LOTUS_DIR = '/gws/smf/j04/ncas_radar/lbennett/lotus-output/'+PROJ_NAME+'/cals/'
