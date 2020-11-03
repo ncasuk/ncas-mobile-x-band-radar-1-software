@@ -11,9 +11,6 @@ MAX_END_DATE = '20201230'
 # LOTUS settings
 QUEUE = 'short-serial'
 
-# choice for success / failure output handling
-BACKEND = 'db' #'db' or 'file'
-
 # Number of hours passed to convert_hour.py at a time
 CHUNK_SIZE = 6
 
@@ -29,10 +26,7 @@ LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-b
 LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 
 # choice for success / failure output handling
-BACKEND = 'file' #'db' or 'file'
-
-SUCCESS_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out/success'
-FAILURE_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out/failure'
+BACKEND = 'db' #'db' or 'file'
 
 # Top level directory for raw data
 INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'

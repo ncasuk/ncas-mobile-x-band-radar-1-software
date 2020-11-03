@@ -19,7 +19,7 @@ def test_RadxConvert():
 def test_output_one_hour():
     example_hour = '2020040705'
     example_scan_type = 'vol'
-    example_args = Namespace(scan_type=example_scan_type, hours=[example_hour])
+    example_args = Namespace(scan_type=[example_scan_type], hours=[example_hour])
 
     convert_hour.loop_over_hours(example_args)
 

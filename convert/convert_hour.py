@@ -12,7 +12,7 @@ from backend.database_handler import DataBaseHandler
 from backend.file_system_handler import FileSystemHandler
 
 import re
-import convert.SETTINGS
+from convert import SETTINGS
 import subprocess
 
 
@@ -121,14 +121,10 @@ def _get_results_handler(n_facets, sep, error_types):
     """
 
     if SETTINGS.BACKEND == 'db':
-        constring = os.environ.get("ABCUNIT_DB_SETTINGS")
-        if not constring:
-            raise KeyError('Please create environment variable ABCUNI_DB_SETTINGS'
-                            'in for format of "dbname=<db_name> user=<user_name>'
-                            'host=<host_name> password=<password>"')
-        return DataBaseHandler(constring, error_types)
+        return DataBaseHandler(error_types)
     elif SETTINGS.BACKEND == 'file':
-        return FileSystemHandler(n_facets, sep, error_types)
+        base_path = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out'
+        return FileSystemHandler(base_path, n_facets, sep, error_types)
     else:
         raise ValueError('SETTINGS.BACKEND is not set properly')
 
