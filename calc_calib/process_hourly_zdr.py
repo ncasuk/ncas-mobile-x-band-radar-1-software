@@ -1,9 +1,10 @@
 import numpy as np
 import warnings
 import os
-
+import SETTINGS
 import utilities
 from utilities import calib_functions
+import re
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -35,7 +36,7 @@ def make_hourly_files():
     #we now want to calculate hourly values of melting layer height and ZDR
 
     for date in proc_dates[0:]:
-        print date
+        print(date)
         success_file = os.path.join(success_dir, date+'_hourly_ml_zdr.txt')
         no_rain_file = os.path.join(no_rain_dir, date+'_no_hourly_rain.txt')
 
@@ -43,10 +44,18 @@ def make_hourly_files():
         if not os.path.exists(success_file) and not os.path.exists(no_rain_file):
 
             if calib_functions.calc_hourly_ML(outdir,date):
- 	        f=open(success_file,'w')
-	        f.write("")
-	        f.close()
-	    else:
+       	        f=open(success_file,'w')
+                f.write("")
+                f.close()
+            else:
                 f=open(no_rain_file,'w')
-	        f.write("")
-	        f.close()
+                f.write("")
+                f.close()
+
+def main():
+    """Runs script if called on command line"""
+
+    make_hourly_files()
+
+if __name__ == '__main__':
+    main() 
