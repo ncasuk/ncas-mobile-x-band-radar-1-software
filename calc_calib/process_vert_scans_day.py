@@ -48,13 +48,13 @@ def process_vert_scans(args):
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
     #Directory for input radar data
-    raddir = SETTINGS.DATA_DIR
+    raddir = SETTINGS.VERT_DIR
     
     #Directory for weather station data
     wxdir = SETTINGS.WXDIR
     
     #Directory for processed data
-    outdir = SETTINGS.CALIB_DIR
+    outdir = SETTINGS.ZDR_CALIB_DIR
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     

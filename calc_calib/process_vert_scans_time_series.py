@@ -51,7 +51,7 @@ def loop_over_days(args):
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
  
-    proc_dates = os.listdir(SETTINGS.DATA_DIR)
+    proc_dates = os.listdir(SETTINGS.VERT_DIR)
     proc_dates.sort()
     
     current_directory = os.getcwd()  # get current working directory
