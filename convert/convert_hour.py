@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import argparse
-import dateutil
 import dateutil.parser as dp
 import glob
 from netCDF4 import Dataset
@@ -23,23 +22,25 @@ def arg_parse_hour():
     """
 
     parser = argparse.ArgumentParser()
-    type_choices = ['vol','ele','azi']
+    type_choices = ['vol', 'ele', 'azi']
 
-    parser.add_argument('-t', '--scan_type',  nargs=1, type=str, choices=type_choices, required=True,
-                        help=f'Type of scan, one of: {type_choices}', metavar='')
+    parser.add_argument('-t', '--scan_type',  nargs=1, type=str,
+                        choices=type_choices, required=True,
+                        help=f'Type of scan, one of: {type_choices}',
+                        metavar='')
     # Not sure if this will work along side having a tagged parameter
-    parser.add_argument('hours', nargs='+', type=str, help='The hours you want to run'
-                        'in the format YYYYMMDDHH', metavar='')
+    parser.add_argument('hours', nargs='+', type=str, help='The hours you want '
+                        'to run in the format YYYYMMDDHH', metavar='')
 
     return parser.parse_args()
 
 
 def _map_scan_type(type):
-    """ 
+    """
     Converts (two way) between <> scan names and <> scan names.
-    
+
     :param type: (str) Scan type in either <> or <> format
-    
+
     :return: (str) Converted scan type
     """
 
@@ -54,12 +55,12 @@ def _map_scan_type(type):
 
     if type in scan_dict:
         return scan_dict[type]
-    
+
     raise KeyError(f'Cannot match scan type {type}')
 
 
 def _get_input_files(hour, scan_type):
-    """ 
+    """
     Finds raw input files from SETTINGS.INPUT_DIR
 
     :param hour: (str) Hour of the data in the format YYYYMMDDHH
@@ -72,8 +73,9 @@ def _get_input_files(hour, scan_type):
     date_dir = None
     try:
         date_dir = dp.isoparse(hour[:-2]).strftime("%Y-%m-%d")
-    except ValueError as _:
-        raise ValueError('[ERROR] DateHour format is incorect, should be YYYYMMDDHH')
+    except ValueError:
+        raise ValueError('[ERROR] DateHour format is incorect, '
+                         'should be YYYYMMDDHH')
 
     files_path = SETTINGS.INPUT_DIR
     # They're all dirs but feels good to check
@@ -87,7 +89,7 @@ def _get_input_files(hour, scan_type):
         pattern = re.compile(f"^{SETTINGS.PROJ_NAME}.*.azi$") """
 
     # Pattern to find data folders (anything that has an underscore .scan_type)
-    pattern = re.compile(f"^.*_.*\.{scan_type}$")
+    pattern = re.compile(f"^.*_.*.{scan_type}$")
 
     filtered_dirs = [os.path.join(files_path, name) for name in dirs if pattern.match(name)]
     dbz_files = []
@@ -103,15 +105,17 @@ def _get_input_files(hour, scan_type):
 
 
 def _get_results_handler(n_facets, sep, error_types):
-    """ 
+    """
     Returns a result handler which either uses a database or the file system
     depending on the SETTING.BACKEND.
-    If using a database make sure there is an environment variable called 
-    $ABCUNIT_DB_SETTINGS which is set to "dbname=<db_name> user=<user_name> host=<host_name> password=<password>".
-    
+    If using a database make sure there is an environment variable called
+    $ABCUNIT_DB_SETTINGS which is set to "dbname=<db_name> user=<user_name>
+    host=<host_name> password=<password>".
+
     :param n_facets: (int) Number of facets used to define a result.
     :param sep: (str) Delimeter for facet separation in identifier.
-    :param error_types: (list) List of the string names of the types of errors tat can occur.
+    :param error_types: (list) List of the string names of the types of
+    errors that can occur.
     """
 
     if SETTINGS.BACKEND == 'db':
@@ -128,16 +132,17 @@ def _get_results_handler(n_facets, sep, error_types):
 
 
 def loop_over_hours(args):
-    """ 
+    """
     Processes each file for each hour passed in the comand line arguemtns.
-    
-    :param args: (namespace) Namespace object built from attributes parsed from command line
+
+    :param args: (namespace) Namespace object built from attributes parsed
+    from command line
     """
 
     scan_type = args.scan_type[0]
     hours = args.hours
-    
-    rh = _get_results_handler(4,'.',['bad_num', 'failure', 'bad_output'])
+
+    rh = _get_results_handler(4, '.', ['bad_num', 'failure', 'bad_output'])
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)
@@ -155,13 +160,13 @@ def loop_over_hours(args):
 
             if failure_count >= SETTINGS.EXIT_AFTER_N_FAILURES:
                 raise ValueError('[WARN] Exiting after failure count reaches limit: '
-                                f'{SETTINGS.EXIT_AFTER_N_FAILURES}')
-            
+                                 f'{SETTINGS.EXIT_AFTER_N_FAILURES}')
+
             fname = os.path.basename(dbz_file)
             input_dir = os.path.dirname(dbz_file)
 
             identifier = f'{year}.{month}.{day}.{os.path.splitext(fname)[0]}'
-            
+
             # Check if allready successful
             if rh.ran_succesfully(identifier):
                 print(f'[INFO] Already ran {dbz_file} sucessfully')
@@ -170,7 +175,7 @@ def loop_over_hours(args):
             # Remove eroneous runs
             rh.delete_result(identifier)
 
-            # Get expected variables 
+            # Get expected variables
             fname_base = fname[:16]
             time_digits = fname[8:14]
 
@@ -198,13 +203,13 @@ def loop_over_hours(args):
             expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \
                             f'ncas-mobile-x-band-radar-1_sandwith_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
 
-            # Get found_vars from the .nc file 
+            # Get found_vars from the .nc file
             found_vars = None
             try:
                 ds = Dataset(expected_file, 'r', format="NETCDF4")
                 found_vars = set(ds.variables.keys())
                 ds.close()
-            except FileNotFoundError as _:
+            except FileNotFoundError:
                 print(f'[ERROR] Expected file {expected_file} not found')
                 rh.insert_failure(identifier, 'bad_output')
                 failure_count += 1
@@ -220,9 +225,9 @@ def loop_over_hours(args):
                 rh.insert_failure(identifier, 'bad_num')
                 continue
             else:
-                print(f'[INFO] All expected variable were found: {expected_vars}') 
+                print(f'[INFO] All expected variable were found: {expected_vars}')
 
-            #output a success
+            # output a success
             rh.insert_success(identifier)
 
 

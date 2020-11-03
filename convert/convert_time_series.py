@@ -1,10 +1,10 @@
 import argparse
 from datetime import timedelta
-import dateutil
 import dateutil.parser as dp
 import os
 from . import SETTINGS
 import subprocess
+
 
 def arg_parse_all():
     """
@@ -15,24 +15,30 @@ def arg_parse_all():
 
     parser = argparse.ArgumentParser()
 
-    type_choices = ['vol','ele','azi']
+    type_choices = ['vol', 'ele', 'azi']
 
-    parser.add_argument('-t', '--scan_type', nargs=1, type=str, choices=type_choices, required=True,
-                        help=f'Type of scan, one of: {type_choices}', metavar='')
-    parser.add_argument('-s', '--start', nargs=1, type=str, required=True, default=SETTINGS.MIN_START_DATE,
+    parser.add_argument('-t', '--scan_type', nargs=1, type=str,
+                        choices=type_choices, required=True,
+                        help=f'Type of scan, one of: {type_choices}',
+                        metavar='')
+    parser.add_argument('-s', '--start', nargs=1, type=str, required=True,
+                        default=SETTINGS.MIN_START_DATE,
                         help=f'Start date in the format YYYYMMDD, {SETTINGS.MIN_START_DATE} at the earliest',
                         metavar='')
-    parser.add_argument('-e', '--end', nargs=1, type=str, required=True, default=SETTINGS.MAX_END_DATE,
+    parser.add_argument('-e', '--end', nargs=1, type=str, required=True,
+                        default=SETTINGS.MAX_END_DATE,
                         help=f'End date in the format YYYYMMDD, {SETTINGS.MAX_END_DATE} at the latest',
                         metavar='')
 
     return parser.parse_args()
 
+
 def loop_over_days(args):
-    """ 
+    """
     Runs convert_rainte_x_band_day.py for each day in the given time range
-    
-    :param args: (namespace) Namespace object built from arguments parsed from comandline
+
+    :param args: (namespace) Namespace object built from arguments parsed
+    from the comand line
     """
 
     # import pdb; pdb.set_trace(), or add breakpoint if doesn't work
@@ -40,11 +46,11 @@ def loop_over_days(args):
     start_date = args.start[0]
     end_date = args.end[0]
 
-    #validate dates
+    # validate dates
     try:
         start_date_time = dp.isoparse(start_date)
         end_date_time = dp.isoparse(end_date)
-    except ValueError as _:
+    except ValueError:
         raise ValueError('[ERROR] Date format is incorect, should be YYYYMMDD')
 
     if start_date_time > end_date_time:
