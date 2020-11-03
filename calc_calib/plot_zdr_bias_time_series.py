@@ -59,7 +59,7 @@ def plot_zdr(args):
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
-    outdir = SETTINGS.CALIB_DIR
+    outdir = SETTINGS.ZDR_CALIB_DIR
     
     all_hourly_data=pd.DataFrame()
     all_data=pd.DataFrame()
