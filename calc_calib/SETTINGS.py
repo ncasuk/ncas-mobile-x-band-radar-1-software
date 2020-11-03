@@ -17,8 +17,14 @@ LOTUS_DIR = '/gws/smf/j04/ncas_radar/lbennett/lotus-output/'+PROJ_NAME+'/cals/'
 #Location of vertical scans
 DATA_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/cfradial/uncalib_v1/vert/'
 
+#Location of volume scans
+VOLUME_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/cfradial/uncalib_v1/sur/'
+
 #Location of output of ZDR data for calibration
-CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/ZDRcalib/test/'
+ZDR_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/ZDRcalib/test/'
+
+#Location of output of Z data for calibration
+Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/test/'
 
 #Location of weather station text files with daily rain amounts
 WXDIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-aws-2/incoming/'+PROJ_NAME+'/NOAA/'
