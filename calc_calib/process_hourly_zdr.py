@@ -25,8 +25,8 @@ def make_hourly_files():
         os.makedirs(no_rain_dir)
 
     #list only date directories
-    inputdir = SETTINGS.CALIB_DIR
-    outdir = SETTINGS.CALIB_DIR
+    inputdir = SETTINGS.ZDR_CALIB_DIR
+    outdir = SETTINGS.ZDR_CALIB_DIR
 
     pattern = re.compile(r'(\d{8})')
     proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]
