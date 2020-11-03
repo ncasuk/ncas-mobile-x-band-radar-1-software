@@ -5,12 +5,14 @@ import dateutil.parser as dp
 import glob
 from netCDF4 import Dataset
 import os
-# To be changed once we have exported backend
-from convert.output_handler.database_handler import DataBaseHandler
-from convert.output_handler.file_system_handler import FileSystemHandler
-# ----
+
+# from convert.output_handler.database_handler import DataBaseHandler
+# from convert.output_handler.file_system_handler import FileSystemHandler
+from backend.database_handler import DataBaseHandler
+from backend.file_system_handler import FileSystemHandler
+
 import re
-import SETTINGS
+import convert.SETTINGS
 import subprocess
 
 
