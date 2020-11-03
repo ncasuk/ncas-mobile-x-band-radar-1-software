@@ -7,12 +7,13 @@ import glob
 from netCDF4 import Dataset
 import os
 # To be changed once we have exported backend
-from output_handler.database_handler import DataBaseHandler
-from output_handler.file_system_handler import FileSystemHandler
+from convert.output_handler.database_handler import DataBaseHandler
+from convert.output_handler.file_system_handler import FileSystemHandler
 # ----
 import re
 import SETTINGS
 import subprocess
+
 
 def arg_parse_hour():
     """
@@ -85,7 +86,8 @@ def _get_input_files(hour, scan_type):
     elif scan_type == 'azi':
         pattern = re.compile(f"^{SETTINGS.PROJ_NAME}.*.azi$") """
 
-    pattern = re.compile(f"^.*\.{scan_type}$")
+    # Pattern to find data folders (anything that has an underscore .scan_type)
+    pattern = re.compile(f"^.*_.*\.{scan_type}$")
 
     filtered_dirs = [os.path.join(files_path, name) for name in dirs if pattern.match(name)]
     dbz_files = []
@@ -135,7 +137,6 @@ def loop_over_hours(args):
     scan_type = args.scan_type[0]
     hours = args.hours
     
-    # THIS IS ALL TO CHANGE
     rh = _get_results_handler(4,'.',['bad_num', 'failure', 'bad_output'])
 
     failure_count = 0
@@ -200,8 +201,6 @@ def loop_over_hours(args):
             # Get found_vars from the .nc file 
             found_vars = None
             try:
-                # MANY MORE VARIABLES ARE IN THERE THAN JUST expected_vars
-                # NEED TO FIX
                 ds = Dataset(expected_file, 'r', format="NETCDF4")
                 found_vars = set(ds.variables.keys())
                 ds.close()

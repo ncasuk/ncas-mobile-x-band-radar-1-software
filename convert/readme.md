@@ -41,7 +41,7 @@ This script calls LOTUS with the `convert_hour.py` script which is passes `SETTI
 ## Hour ##
 
 ``` 
-convert_day.py -t <scan_type> <hour_1> ... <hour_n> 
+convert_hour.py -t <scan_type> <hour_1> ... <hour_n> 
 ```
 
 Where <scan_type> can be one of `vol`, `ele`, or `azi`, and <hour_n> is in the format YYYYMMDDHH.
@@ -49,7 +49,7 @@ Where <scan_type> can be one of `vol`, `ele`, or `azi`, and <hour_n> is in the f
 Example:
 
 ``` 
-convert_day.py -t azi 2020101207 2020101208 2020101209 2020101210 2020101211 2020101212 
+convert_hour.py -t azi 2020101207 2020101208 2020101209 2020101210 2020101211 2020101212 
 ```
 
 ## Settings ##
