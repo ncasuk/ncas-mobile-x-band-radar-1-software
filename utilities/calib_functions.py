@@ -860,14 +860,18 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     #filename = outdir + 'good_rays'     
     #np.save(filename,good_rays)
+    
     print("total rays = ", np.sum(np.isfinite(phiest_all.flatten())))
     if np.sum(np.isfinite(phiest_all.flatten())) !=0:
         print("phiest and phiobs values exist")
-        phiest_filename = os.path.join(outdir, 'phiest_all_att_' + day)
+        phi_dir=os.path.join(outdir,'phi_files')
+        phase_dir=os.path.join(outdir,'phase_files')
+
+        phiest_filename = os.path.join(phi_dir, 'phiest_all_att_' + day)
         np.save(phiest_filename,phiest_all)
-        phiobs_filename = os.path.join(outdir, 'phiobs_all_att_' + day)
+        phiobs_filename = os.path.join(phi_dir, 'phiobs_all_att_' + day)
         np.save(phiobs_filename,phiobs_all)
-        startphi_filename = os.path.join(outdir, 'startphi_all_' + day)
+        startphi_filename = os.path.join(phase_dir, 'startphi_all_' + day)
         np.save(startphi_filename,startphi_all)
         return True
     else:
