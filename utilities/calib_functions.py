@@ -1,20 +1,17 @@
 import pyart
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticks 
 from datetime import date
 from datetime import time
 from datetime import timedelta
 import pandas as pd
 #from functions import moving_average
-
+from calc_calib import SETTINGS
 import warnings
 import glob
 import gc
 import copy
 import os
-import scipy as scipy
 
 plt.switch_backend('agg')
 
@@ -722,24 +719,16 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
 #        c=0
 
-# Exclusions is a list of tuples (), where each tuple is a pair of 
-# tuples. 
-# The first tuple of each pair is the start and stop elevation of the 
-# segment to exclude.
-# The second tuple contains the start and stop azimuth of the segment 
-# to exclude.
-# This "one-liner" builds a generator from the list of tuples so each 
-# tuple defines a binary array which is True where the segment occurs 
-# and false elsewhere. 
-# All conditions must be met, so between start and stop in both azimuth 
-# and elevation. 
+# A list of tuples is imported from the SETTINGS file. This "one-liner" 
+# builds a generator from the list of tuples so each tuple defines a 
+# binary array which is True where the segment occurs and false 
+# elsewhere. All conditions must be met, so between start and stop in 
+# both azimuth and elevation. 
 # These are then combined to a single array using np.any to create a 
 # single exclude binary array which is True where any of the segments 
 # are found and False in non-excluded places
 
-    	# raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
-    	#chilbolton 080620_att exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
-       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,0.6),(0,360)),((0.6,1.01),(190,211)),((0.6,1.01),(324,335))]
+        exclusions = SETTINGS.EXCLUSIONS
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],

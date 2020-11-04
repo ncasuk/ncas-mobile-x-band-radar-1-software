@@ -64,8 +64,8 @@ def loop_over_days(args):
         os.makedirs(no_rays_dir)
 
     print date
-    success_file = os.path.join(success_dir, date+'.txt')
-    no_rays_file = os.path.join(no_rays_dir, date+'.txt')
+    success_file = os.path.join(success_dir, date+'_Z.txt')
+    no_rays_file = os.path.join(no_rays_dir, date+'_Z.txt')
 
     #If there is a success file or a no_rays file, write out to log file
     if os.path.exists(success_file):
