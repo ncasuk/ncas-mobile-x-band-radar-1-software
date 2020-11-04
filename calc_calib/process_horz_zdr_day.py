@@ -64,11 +64,11 @@ def process_volume_scans(args):
             var = data.resample('D').mean()
             mlh = var['H_ML'][0]
     
-            T, medZDR18 = calib_functions.horiz_zdr(datadir, date, outdir, mlh, zcorr)
+            T, medZDR18 = calib_functions.horiz_zdr(inputdir, date, outdir, mlh, zcorr)
             T2 = pd.to_datetime(T)
             T2=T2.tz_convert(None)
             output = pd.DataFrame({'ZDR' : medZDR18}, index=T2)
-            filename = os.path.join(outdir,date,'_horz_zdr.csv')
+            filename = os.path.join(outdir,date+'_horz_zdr.csv')
             output.to_csv(filename)
 
 def main():

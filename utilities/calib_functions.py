@@ -914,10 +914,9 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
         Rdim = rad.ngates
         Edim = rad.nsweeps
         Tdim = rad.nrays
-        Adim = Tdim/Edim
+        Adim = int(Tdim/Edim)
         
-   	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
-       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+       	exclusions = SETTINGS.EXCLUSIONS 
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],
