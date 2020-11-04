@@ -3,17 +3,15 @@
 import argparse
 import dateutil.parser as dp
 import glob
-from netCDF4 import Dataset
 import os
+import re
+import subprocess
 
-# from convert.output_handler.database_handler import DataBaseHandler
-# from convert.output_handler.file_system_handler import FileSystemHandler
+from netCDF4 import Dataset
+
 from backend.database_handler import DataBaseHandler
 from backend.file_system_handler import FileSystemHandler
-
-import re
 from convert import SETTINGS
-import subprocess
 
 
 def arg_parse_hour():

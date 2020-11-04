@@ -10,6 +10,7 @@ MAX_END_DATE = '20201230'
 
 # LOTUS settings
 QUEUE = 'short-serial'
+WALL_CLOCK = '40:00'
 
 # Number of hours passed to convert_hour.py at a time
 CHUNK_SIZE = 6

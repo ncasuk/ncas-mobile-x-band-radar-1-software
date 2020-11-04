@@ -77,10 +77,6 @@ def loop_over_chunks(args):
 
         print(f"[INFO] Running for {hours}")
 
-        #  time delta minutes ---> string
-        formatted_time = '{:02.0f}'.format(SETTINGS.CHUNK_SIZE / 2)
-        wallclock = f"{formatted_time}:00"
-
         hour_range = hours[0][-2:] + '-' + hours[-1][-2:]
         output_base = SETTINGS.LOTUS_OUTPUT_PATH.format(year=day_date_time.year,
                                                         month=day_date_time.month,
@@ -91,7 +87,7 @@ def loop_over_chunks(args):
 
         output_base += f'/{hour_range}-{scan_type}'
 
-        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {wallclock} -o {output_base}.out " \
+        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK} -o {output_base}.out " \
                         f"-e {output_base}.err {script_directory}/convert_hour.py " \
                         f"-t {scan_type} {' '.join(hours)}"
         print(f"[INFO] Running: {slurm_command}")
