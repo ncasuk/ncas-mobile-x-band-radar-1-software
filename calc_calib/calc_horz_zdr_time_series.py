@@ -3,6 +3,7 @@ import os
 import argparse
 import dateutil.parser as dp
 from datetime import date
+import re
 
 def arg_parse_all():
     """
@@ -20,8 +21,6 @@ def arg_parse_all():
                         default=SETTINGS.MAX_END_DATE,type=str, 
                         help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
-    parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
-                        help=f'Make plots of the profiles if p is set to 1',metavar='')
     
     return parser.parse_args()
 
@@ -40,7 +39,6 @@ def loop_over_days(args):
 
     start_date = args.start_date[0]
     end_date = args.end_date[0]
-    plot = args.make_plots[0]
 
     start_date_dt = dp.parse(start_date) 
     end_date_dt = dp.parse(end_date) 
@@ -51,9 +49,11 @@ def loop_over_days(args):
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
  
-    proc_dates = os.listdir(SETTINGS.VOLUME_DIR)
+    inputdir = SETTINGS.ZDR_CALIB_DIR
+    pattern = re.compile(r'(\d{8})')
+    proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]
     proc_dates.sort()
-    
+
     current_directory = os.getcwd()  # get current working directory
 
     for day in proc_dates:
