@@ -27,7 +27,7 @@ def arg_parse_day():
     
     return parser.parse_args()
 
-def loop_over_days(args):
+def process_volume_files(args):
 
     """ 
     Processes the volume scans for each day with rain present, to calculate Z bias
