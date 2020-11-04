@@ -26,7 +26,7 @@ LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-b
 LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 
 # choice for success / failure output handling
-BACKEND = 'db' #'db' or 'file'
+BACKEND = 'file' #'db' or 'file'
 
 # Top level directory for raw data
 INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'

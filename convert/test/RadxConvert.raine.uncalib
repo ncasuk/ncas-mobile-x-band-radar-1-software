@@ -2165,7 +2165,7 @@ compression_level = 4;
 
 //output_dir = "$(DATA_DIR)/raine/cfradial/uncalib_v1_new/";
 //output_dir = "/work/scratch-nopw/lbennett/raine/uncalib_v1/";
-output_dir = "/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out/";
+output_dir = "/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out";
 
 ///////////// output_filename_mode ////////////////////
 //

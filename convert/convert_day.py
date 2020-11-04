@@ -2,7 +2,7 @@ import argparse
 from datetime import timedelta
 import dateutil.parser as dp
 import os
-import SETTINGS
+from convert import SETTINGS
 import subprocess
 
 
@@ -77,6 +77,7 @@ def loop_over_chunks(args):
 
         print(f"[INFO] Running for {hours}")
 
+        #  time delta minutes ---> string
         formatted_time = '{:02.0f}'.format(SETTINGS.CHUNK_SIZE / 2)
         wallclock = f"{formatted_time}:00"
 

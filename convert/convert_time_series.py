@@ -2,7 +2,7 @@ import argparse
 from datetime import timedelta
 import dateutil.parser as dp
 import os
-from . import SETTINGS
+from convert import SETTINGS
 import subprocess
 
 
