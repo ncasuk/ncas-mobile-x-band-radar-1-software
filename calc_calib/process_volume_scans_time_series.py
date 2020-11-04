@@ -57,7 +57,6 @@ def loop_over_days(args):
     pattern = re.compile(r'(\d{8})')
     proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]
     proc_dates.sort()
-    print(proc_dates) 
     current_directory = os.getcwd()  # get current working directory
 
     for day in proc_dates:

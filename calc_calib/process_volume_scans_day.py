@@ -27,7 +27,7 @@ def arg_parse_day():
     
     return parser.parse_args()
 
-def process_volume_files(args):
+def process_volume_scans(args):
 
     """ 
     Processes the volume scans for each day with rain present, to calculate Z bias
@@ -106,7 +106,7 @@ def main():
     """Runs script if called on command line"""
 
     args = arg_parse_day()
-    loop_over_days(args)
+    process_volume_scans(args)
 
 if __name__ == '__main__':
     main()
