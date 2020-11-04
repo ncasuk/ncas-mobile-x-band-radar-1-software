@@ -841,7 +841,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
        	phiest_all[file,0:Tdim] = phiest
        	startphi_all[file,0:Tdim] = startphi
 
-       	good_rays = np.sum(np.isfinite(phiest_all));
+       	good_rays = np.sum(np.isfinite(phiest));
        	print('file =',file,'rays =',str(good_rays))
        	del rad
        	del zdr, rhohv, kdp, phidp, uzh, uphidp
