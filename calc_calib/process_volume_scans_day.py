@@ -2,9 +2,12 @@ import numpy as np
 import pandas as pd
 import warnings
 import os
+import argparse
+import dateutil.parser as dp
 import re
 import utilities
 from utilities import calib_functions
+import SETTINGS
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -33,6 +36,7 @@ def loop_over_days(args):
     """
 
     date=args.date[0]
+    print('Processing ',date)
     day_dt = dp.parse(date)
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
@@ -63,22 +67,22 @@ def loop_over_days(args):
     if not os.path.exists(no_rays_dir):
         os.makedirs(no_rays_dir)
 
-    print date
+    #print(date)
     success_file = os.path.join(success_dir, date+'_Z.txt')
     no_rays_file = os.path.join(no_rays_dir, date+'_Z.txt')
 
     #If there is a success file or a no_rays file, write out to log file
     if os.path.exists(success_file):
-        print "already processed, success file found"
+        print("already processed, success file found")
     elif os.path.exists(no_rays_file):
-        print "already processed, no_rays file found"
+        print("already processed, no_rays file found")
 
     #If there is no 'success' file and no 'no_rays' file, then nothing has been processed, so carry on to process the data
     if not os.path.exists(success_file) and not os.path.exists(no_rays_file):
-        print "no success or no_rays file found"
+        print("no success or no_rays file found")
         mlfile = os.path.join(zdrdir, date, 'hourly_ml_zdr.csv')
         if os.path.exists(mlfile):
-            print "found ml_file, processing data"
+            print("found ml_file, processing data")
             ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
             raddir = os.path.join(inputdir, date)
             #print raddir, outdir, date
@@ -86,14 +90,23 @@ def loop_over_days(args):
                 f=open(success_file,'w')
                 f.write("")
                 f.close()
-                print "written success file"
+                print("written success file")
             else:
                 f=open(no_rays_file,'w')
                 f.write("")
                 f.close()
-                print "written no_rays file"
+                print("written no_rays file")
         else:
             f=open(no_rays_file,'w')
             f.write("")
             f.close()
-            print "no hourly ml file, nothing to process"
+            print("no hourly ml file, nothing to process")
+
+def main():
+    """Runs script if called on command line"""
+
+    args = arg_parse_day()
+    loop_over_days(args)
+
+if __name__ == '__main__':
+    main()

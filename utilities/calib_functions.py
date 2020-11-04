@@ -614,7 +614,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
     filelist = glob.glob(os.path.join(raddir,'*.nc'))
     filelist.sort()
     nfiles=len(filelist)
-    print(nfiles)
+    print('Number of files = ',nfiles)
 
     #Extract number of rays 
     rad=pyart.io.read(filelist[0])
@@ -638,7 +638,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     for file in range(nfiles):
     #for file in (30,):
-        print(file)
+        #print(file)
 
         #Read file
         rad=pyart.io.read(filelist[file])
@@ -654,8 +654,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
         Rdim = rad.ngates
         Edim = rad.nsweeps
         Tdim = rad.nrays
-        Adim = Tdim/Edim
-
+        Adim = int(Tdim/Edim)
         #Extract data
         try:
             rg = copy.deepcopy(rad.range['data']/1000)
@@ -843,7 +842,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
        	startphi_all[file,0:Tdim] = startphi
 
        	good_rays = np.sum(np.isfinite(phiest_all));
-       	print('file=',file,'rays=',str(good_rays))
+       	print('file =',file,'rays =',str(good_rays))
        	del rad
        	del zdr, rhohv, kdp, phidp, uzh, uphidp
        	gc.collect()
