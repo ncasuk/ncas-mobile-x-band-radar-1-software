@@ -55,16 +55,14 @@ def process_volume_scans(args):
 
     zcorr = 0.0
 
-    ml_file = os.path.join(zdr_dir,date,'hourly_ml_zdr.csv')
+#    mlh, [] = extract_ml_zdr(time, ml_zdr)
+    mlfile = os.path.join(zdr_dir,date,'hourly_ml_zdr.csv')
 
-    if os.path.exists(ml_file):
-        data = pd.read_csv(ml_file,index_col=0, parse_dates=True)
+    if os.path.exists(mlfile):
+        ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
     
-        if data.empty==False:
-            var = data.resample('D').mean()
-            mlh = var['H_ML'][0]
-    
-            T, medZDR18 = calib_functions.horiz_zdr(inputdir, date, outdir, mlh, zcorr)
+        if ml_zdr.empty==False:
+            T, medZDR18 = calib_functions.horiz_zdr(inputdir, date, outdir, ml_zdr, zcorr)
             T2 = pd.to_datetime(T)
             T2=T2.tz_convert(None)
             output = pd.DataFrame({'ZDR' : medZDR18}, index=T2)

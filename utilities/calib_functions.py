@@ -883,7 +883,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-def horiz_zdr(datadir, date, outdir, mlh, zcorr):
+def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
     
     filelist = glob.glob(datadir + date + '/*.nc')
     filelist.sort()
@@ -952,6 +952,9 @@ def horiz_zdr(datadir, date, outdir, mlh, zcorr):
                 beam_height[(Adim*j)+i,:] = radh/1000 + np.sin(np.deg2rad(el[j]))*rg + np.sqrt(rg**2 + (6371*4/3.0)**2) - (6371*4/3.0);
 
         beam_height = beam_height[az_index,:]
+
+        #Extract melting layer height for the given radar scan time to use as a threshold on data selection
+        mlh, _ = extract_ml_zdr(time, ml_zdr)
 
         zind = beam_height > mlh   
         uzh[zind==True] = np.nan    
