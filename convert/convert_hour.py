@@ -138,8 +138,6 @@ def loop_over_hours(args):
     scan_type = args.scan_type[0]
     hours = args.hours
 
-    import pdb; pdb.set_trace()
-
     rh = _get_results_handler(4, '.', ['bad_num', 'failure', 'bad_output'])
 
     failure_count = 0
