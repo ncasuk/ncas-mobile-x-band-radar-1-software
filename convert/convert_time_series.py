@@ -51,7 +51,7 @@ def loop_over_days(args):
         start_date_time = dp.isoparse(start_date)
         end_date_time = dp.isoparse(end_date)
     except ValueError:
-        raise ValueError('[ERROR] Date format is incorect, should be YYYYMMDD')
+        raise ValueError('[ERROR] Date format is incorrect, should be YYYYMMDD')
 
     if start_date_time > end_date_time:
         raise ValueError('Start date must be before end date')

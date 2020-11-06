@@ -74,7 +74,7 @@ def _get_input_files(hour, scan_type):
     try:
         date_dir = dp.isoparse(hour[:-2]).strftime("%Y-%m-%d")
     except ValueError:
-        raise ValueError('[ERROR] DateHour format is incorect, '
+        raise ValueError('[ERROR] DateHour format is incorrect, '
                          'should be YYYYMMDDHH')
 
     files_path = SETTINGS.INPUT_DIR
@@ -129,7 +129,7 @@ def _get_results_handler(n_facets, sep, error_types):
 
 def loop_over_hours(args):
     """
-    Processes each file for each hour passed in the comand line arguemtns.
+    Processes each file for each hour passed in the comand line arguments.
 
     :param args: (namespace) Namespace object built from attributes parsed
     from command line
@@ -164,11 +164,11 @@ def loop_over_hours(args):
             identifier = f'{year}.{month}.{day}.{os.path.splitext(fname)[0]}'
 
             # Check if allready successful
-            if rh.ran_succesfully(identifier):
-                print(f'[INFO] Already ran {dbz_file} sucessfully')
+            if rh.ran_successfully(identifier):
+                print(f'[INFO] Already ran {dbz_file} successfully')
                 continue
 
-            # Remove eroneous runs
+            # Remove erroneous runs
             rh.delete_result(identifier)
 
             # Get expected variables

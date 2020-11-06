@@ -38,7 +38,7 @@ def test_output_one_hour():
     2020040705582800dBZv.vol
     """
 
-    # If file isn't produced then that shuold be seen in the results handler but can check manually here
+    # If file isn't produced then that should be seen in the results handler but can check manually here
 
     example_expected_files = ['2020040705045800dBZv.vol', '2020040705105400dBZv.vol', '2020040705165000dBZv.vol'
                               '2020040705224400dBZv.vol', '2020040705284000dBZv.vol', '2020040705344900dBZv.vol'

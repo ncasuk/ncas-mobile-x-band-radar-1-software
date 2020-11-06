@@ -43,7 +43,7 @@ def loop_over_chunks(args):
     try:
         day_date_time = dp.isoparse(date)
     except ValueError:
-        raise ValueError('[ERROR] Date format is incorect, should be YYYYMMDD')
+        raise ValueError('[ERROR] Date format is incorrect, should be YYYYMMDD')
 
     min_date = dp.isoparse(SETTINGS.MIN_START_DATE)
     max_date = dp.isoparse(SETTINGS.MAX_END_DATE)
