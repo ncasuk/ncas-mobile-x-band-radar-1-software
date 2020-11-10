@@ -1,4 +1,4 @@
-QUEUE='short-serial'
+QUEUE='short-serial-4hr'
 WALLCLOCK = '01:00:00'
 PROJ_NAME = 'raine'
 
@@ -28,7 +28,10 @@ VOLUME_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/cfradial/un
 ZDR_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/ZDRcalib/'
 
 #Location of output of Z data for calibration
-Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/test/'
+Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/'
+
+#Location of phi files 
+PHI_DIR = Z_CALIB_DIR+'phi_files/010620_att/'
 
 # Exclusions is a list of tuples (), where each tuple is a pair of 
 # tuples.The first tuple of each pair is the start and stop elevation 
