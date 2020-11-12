@@ -226,6 +226,8 @@ def loop_over_hours(args):
             # output a success
             rh.insert_success(identifier)
 
+    rh.close()
+
 
 def main():
     """Runs script if called on command line"""
