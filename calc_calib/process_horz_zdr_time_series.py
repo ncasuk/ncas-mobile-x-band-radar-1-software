@@ -65,7 +65,7 @@ def loop_over_days(args):
             # command to submit to lotus
             sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
                              f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
-                             f"--wrap=\"python {current_directory}/calc_horz_zdr_day.py {day}\""
+                             f"--wrap=\"python {current_directory}/process_horz_zdr_day.py {day}\""
     
             #subprocess.call(sbatch_command, shell=True)
     
