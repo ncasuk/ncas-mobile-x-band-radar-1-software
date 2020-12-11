@@ -16,23 +16,23 @@ WALL_CLOCK = '40:00'
 CHUNK_SIZE = 6
 
 # Radex convert params file
-# PARAMS_FILE=f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.{PROJ_NAME}.uncalib'
+PARAMS_FILE=f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.{PROJ_NAME}.uncalib'
 # WHILE TESTING
-PARAMS_FILE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/RadxConvert.raine.uncalib'
+# PARAMS_FILE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/RadxConvert.raine.uncalib'
 
 # Where .out and .err files from LOTUS are output to
-# LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
+LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
 # WHILE TESTING
-LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_lotus_out'
+# LOTUS_OUTPUT_PATH_BASE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_lotus_out'
 LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 
 # choice for success / failure output handling
-BACKEND = 'file' #'db' or 'file'
+BACKEND = 'db' #'db' or 'file'
 
 # Top level directory for raw data
 INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'
 
 # Output directory for netcdf files (specified in the params file)
-# OUTPUT_DIR = f'/gws/nopw/j04/ncas_radar_vol2/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
+OUTPUT_DIR = f'/gws/nopw/j04/ncas_radar_vol2/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
 # WHILE TESTING
-OUTPUT_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out'
+# OUTPUT_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out'
