@@ -20,5 +20,4 @@ convert/test/RadxConvert.raine.uncalib
 
 __pycache__/
 __pycache__
-*.py
-
+*.pyc
