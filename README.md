@@ -6,4 +6,4 @@
 --notebooks to plot the output and determine biases for the whole project
 --apply the calibration offsets to the data
 
-"docs" contains the pdfs to describe the methodology used for the processing: conversion, calculating calibration values and applying calibration values. The calibration methodoloy itself is described in separate documents.
+"docs" contains the pdfs to describe the methodology used for the processing: conversion, calculating calibration values and applying calibration values. The calibration methodology itself is described in separate documents.
