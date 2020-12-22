@@ -35,7 +35,7 @@ def arg_parse_all():
 
 def loop_over_days(args):
     """
-    Runs convert_rainte_x_band_day.py for each day in the given time range
+    Runs convert_day.py for each day in the given time range
 
     :param args: (namespace) Namespace object built from arguments parsed
     from the comand line
