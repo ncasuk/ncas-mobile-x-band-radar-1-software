@@ -8,7 +8,7 @@ import re
 import subprocess
 
 from netCDF4 import Dataset
-
+#imports the databasehandler module
 from backend.database_handler import DataBaseHandler
 from backend.file_system_handler import FileSystemHandler
 #from convert import SETTINGS
@@ -119,6 +119,9 @@ def _get_results_handler(n_facets, sep, error_types):
     errors that can occur.
     """
 
+# This function is not really needed because we are always going to be using db in the future.
+# For the moment it is useful to keep it in, just in case we want to revert to the file system method. 
+
     if SETTINGS.BACKEND == 'db':
         return DataBaseHandler(error_types)
     elif SETTINGS.BACKEND == 'file':
@@ -139,6 +142,8 @@ def loop_over_hours(args):
     scan_type = args.scan_type[0]
     hours = args.hours
 
+# error types are bad_num (different number of variables in raw vs nc)
+# failure (RadxConvert doesnt complete) and bad_output (no output file found)
     rh = _get_results_handler(4, '.', ['bad_num', 'failure', 'bad_output'])
 
     failure_count = 0
@@ -161,15 +166,18 @@ def loop_over_hours(args):
 
             fname = os.path.basename(dbz_file)
             input_dir = os.path.dirname(dbz_file)
-
+            
+            #This is the file identifier used in the database
             identifier = f'{year}.{month}.{day}.{os.path.splitext(fname)[0]}'
 
-            # Check if allready successful
+            # Check if this file has already been processed successfully
+            #If yes, then go to the next iteration of the loop, i.e. next file
             if rh.ran_successfully(identifier):
                 print(f'[INFO] Already ran {dbz_file} successfully')
                 continue
 
-            # Remove erroneous runs
+            #If there is no success identifier then continue processing the file
+            # Remove previous results for this file
             rh.delete_result(identifier)
 
             # Get expected variables
@@ -182,8 +190,9 @@ def loop_over_hours(args):
             # 'Process the uncalibrated data' (where output is generated)
             script_cmd = f"RadxConvert -v -params {SETTINGS.PARAMS_FILE} -f {dbz_file}"
             print(f'[INFO] Running: {script_cmd}')
+            #If RadxConvert fails, create a failure outcome in the database 
             if subprocess.call(script_cmd, shell=True) != 0:
-                print('[ERROR] RadexConvert call resulted in an error')
+                print('[ERROR] RadxConvert call resulted in an error')
                 rh.insert_failure(identifier, 'failure')
                 failure_count += 1
                 continue
@@ -200,7 +209,8 @@ def loop_over_hours(args):
             expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \
                             f'ncas-mobile-x-band-radar-1_sandwith_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
 
-            # Get found_vars from the .nc file
+            # Read netcdf file to find variables
+            # If the file can't be found, create a bad_output failure identifier
             found_vars = None
             try:
                 ds = Dataset(expected_file, 'r', format="NETCDF4")
@@ -214,7 +224,8 @@ def loop_over_hours(args):
 
             print('[INFO] Checking that the output variables match those in the input files')
 
-            # Checking subset for now
+            #Checks that the variables in the nc file are identical to the variables in the input files
+            #If not, create a failure identifier called bad_num
             if not expected_vars.issubset(found_vars):
                 print('[ERROR] Output variables are not the same as input files'
                       f'{found_vars} != {expected_vars}')
@@ -224,7 +235,7 @@ def loop_over_hours(args):
             else:
                 print(f'[INFO] All expected variable were found: {expected_vars}')
 
-            # output a success
+            # If all of the above is succesful, create a success identifier
             rh.insert_success(identifier)
 
     rh.close()
