@@ -21,7 +21,7 @@ def arg_parse_chunk():
 
     parser.add_argument('-p', '--params_file', nargs=1, required=True, type=str, 
                         help=f'Index for params file given as an integer', metavar='')
-    parser.add_argument('-f', '--files', nargs='*', required=True, type=str, 
+    parser.add_argument('-f', '--files', nargs='+', required=True,
                         help=f'List of files to process', metavar='')
     parser.add_argument('-t', '--scan_type', nargs=1, type=str,
                         choices=type_choices, required=True,

@@ -4,6 +4,7 @@ import glob
 import os
 import SETTINGS
 import argparse
+import dateutil
 import dateutil.parser as dp
 from datetime import date
 import re
@@ -83,7 +84,7 @@ def loop_over_days(args):
                 if start_date_dt <= filetime_dt and end_date_dt >= filetime_dt:
                     files.append(each)
     print('number of files = ', len(files))
-
+    print(files)
     chunk_index=0
 
     for file_chunk in chunks(files,chunk_size):
@@ -96,7 +97,8 @@ def loop_over_days(args):
                          f"--wrap=\"python {current_directory}/apply_calc_chunk.py \
                                 -p {params_file} -f {file_chunk} -t {scan_type}\""
 
-        py_command = f"python {current_directory}/apply_calc_chunk.py -p {params_file} -f {file_chunk} -t {scan_type}"
+        file_list=' '.join(file_chunk)
+        py_command = f"python {current_directory}/apply_calc_chunk.py -p {params_file} -f {file_list} -t {scan_type}"
     
         #subprocess.call(sbatch_command, shell=True)
        # print(f"running {sbatch_command}")

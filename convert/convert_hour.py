@@ -11,7 +11,8 @@ from netCDF4 import Dataset
 
 from backend.database_handler import DataBaseHandler
 from backend.file_system_handler import FileSystemHandler
-from convert import SETTINGS
+#from convert import SETTINGS
+import SETTINGS
 
 
 def arg_parse_hour():
