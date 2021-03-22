@@ -2,7 +2,7 @@ import argparse
 from datetime import timedelta
 import dateutil.parser as dp
 import os
-from convert import SETTINGS
+import SETTINGS
 import subprocess
 
 
@@ -64,7 +64,7 @@ def loop_over_days(args):
         current_date = current_date_time.strftime("%Y%m%d")
         print(f"[INFO] Running for: {current_date}")
 
-        cmd = f"{script_directory}/convert_day.py -t {scan_type} -d {current_date}"
+        cmd = f"python {script_directory}/convert_day.py -t {scan_type} -d {current_date}"
         print(f"[INFO] Running: {cmd}")
         subprocess.call(cmd, shell=True)
 

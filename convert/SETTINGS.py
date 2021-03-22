@@ -6,7 +6,7 @@ EXIT_AFTER_N_FAILURES = 1000000
 
 # Range in which there is data for the project
 MIN_START_DATE = '20181025'
-MAX_END_DATE = '20201230'
+MAX_END_DATE = '20201231'
 
 # LOTUS settings
 QUEUE = 'short-serial'
@@ -30,11 +30,14 @@ LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 BACKEND = 'db' #'db' or 'file'
 
 # Top level directory for raw data
-INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'
+#INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'
+INPUT_DIR = '/gws/smf/j07/ncas_radar/raw_data/ncas-mobile-x-band-radar-1/raine'
 
 # Output directory for netcdf files (specified in the params file)
 #OUTPUT_DIR = f'/gws/nopw/j04/ncas_radar_vol2/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
 # WHILE TESTING
-OUTPUT_DIR = f'/work/scratch-nopw/lbennett/raine/uncalib_v1'
+#OUTPUT_DIR = f'/work/scratch-nopw/lbennett/raine/uncalib_v1'
 # WHILE TESTING
 # OUTPUT_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out'
+OUTPUT_DIR = f'/gws/smf/j07/ncas_radar/data/xband/raine/cfradial/uncalib_v1'
+

@@ -9,8 +9,8 @@ import subprocess
 
 from netCDF4 import Dataset
 #imports the databasehandler module
-from backend.database_handler import DataBaseHandler
-from backend.file_system_handler import FileSystemHandler
+from abcunit_backend.database_handler import DataBaseHandler
+from abcunit_backend.file_system_handler import FileSystemHandler
 #from convert import SETTINGS
 import SETTINGS
 
@@ -105,31 +105,31 @@ def _get_input_files(hour, scan_type):
     return sorted(set(dbz_files))
 
 
-def _get_results_handler(n_facets, sep, error_types):
-    """
-    Returns a result handler which either uses a database or the file system
-    depending on the SETTING.BACKEND.
-    If using a database make sure there is an environment variable called
-    $ABCUNIT_DB_SETTINGS which is set to "dbname=<db_name> user=<user_name>
-    host=<host_name> password=<password>".
-
-    :param n_facets: (int) Number of facets used to define a result.
-    :param sep: (str) Delimeter for facet separation in identifier.
-    :param error_types: (list) List of the string names of the types of
-    errors that can occur.
-    """
-
-# This function is not really needed because we are always going to be using db in the future.
-# For the moment it is useful to keep it in, just in case we want to revert to the file system method. 
-
-    if SETTINGS.BACKEND == 'db':
-        return DataBaseHandler(error_types)
-    elif SETTINGS.BACKEND == 'file':
-        base_path = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out'
-        return FileSystemHandler(base_path, n_facets, sep, error_types)
-    else:
-        raise ValueError('SETTINGS.BACKEND is not set properly')
-
+#def _get_results_handler(n_facets, sep):
+#    """
+#    Returns a result handler which either uses a database or the file system
+#    depending on the SETTING.BACKEND.
+#    If using a database make sure there is an environment variable called
+#    $ABCUNIT_DB_SETTINGS which is set to "dbname=<db_name> user=<user_name>
+#    host=<host_name> password=<password>".
+#
+#    :param n_facets: (int) Number of facets used to define a result.
+#    :param sep: (str) Delimeter for facet separation in identifier.
+#    :param error_types: (list) List of the string names of the types of
+#    errors that can occur.
+#    """
+#
+## This function is not really needed because we are always going to be using db in the future.
+## For the moment it is useful to keep it in, just in case we want to revert to the file system method. 
+#
+#    if SETTINGS.BACKEND == 'db':
+#        return DataBaseHandler(table_name="convert_results")
+#    elif SETTINGS.BACKEND == 'file':
+#        base_path = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_result_out'
+#        return FileSystemHandler(base_path, n_facets, sep, error_types)
+#    else:
+#        raise ValueError('SETTINGS.BACKEND is not set properly')
+#
 
 def loop_over_hours(args):
     """
@@ -144,7 +144,8 @@ def loop_over_hours(args):
 
 # error types are bad_num (different number of variables in raw vs nc)
 # failure (RadxConvert doesnt complete) and bad_output (no output file found)
-    rh = _get_results_handler(4, '.', ['bad_num', 'failure', 'bad_output'])
+    #rh = _get_results_handler(4, '.')
+    rh = DataBaseHandler(table_name="convert_results")
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)

@@ -2,7 +2,9 @@ import argparse
 from datetime import timedelta
 import dateutil.parser as dp
 import os
-from convert import SETTINGS
+#import convert
+#from convert import SETTINGS
+import SETTINGS
 import subprocess
 
 
@@ -87,9 +89,14 @@ def loop_over_chunks(args):
 
         output_base += f'/{hour_range}-{scan_type}'
 
-        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK} -o {output_base}.out " \
-                        f"-e {output_base}.err {script_directory}/convert_hour.py " \
-                        f"-t {scan_type} {' '.join(hours)}"
+#        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK} -o {output_base}.out " \
+#                        f"-e {output_base}.err {script_directory}/convert_hour.py " \
+#                        f"-t {scan_type} {' '.join(hours)}"
+        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK}" \
+                        f" -o {output_base}.out" \
+                        f" -e {output_base}.err" \
+                        f" --wrap=\"python {script_directory}/convert_hour.py \
+                           -t {scan_type} {' '.join(hours)}\""
         print(f"[INFO] Running: {slurm_command}")
         subprocess.call(slurm_command, shell=True)
 
