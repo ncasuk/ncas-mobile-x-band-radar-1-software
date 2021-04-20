@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 import utilities
 from utilities import calib_functions
+from abcunit_backend.database_handler import DataBaseHandler
 
 def arg_parse_day():
     """
@@ -40,6 +41,7 @@ def process_vert_scans(args):
 
     plot=args.make_plots[0]
     day=args.date[0]
+    YYYY, MM, DD = day[:4], day[4:6], day[6:8]
     day_dt = dp.parse(day)
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
@@ -58,67 +60,41 @@ def process_vert_scans(args):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
-    #Directory for logs
-    logdir = SETTINGS.LOG_DIR 
-    success_dir = SETTINGS.SUCCESS_DIR
-    no_rain_dir = SETTINGS.NO_RAIN_DIR
-    
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    if not os.path.exists(success_dir):
-        os.makedirs(success_dir)
-    if not os.path.exists(no_rain_dir):
-        os.makedirs(no_rain_dir)
+    rh = DataBaseHandler(table_name="process_vert_scans")
     
     #For given day of radar data, look to see if rain was observed by the weather station at the site. 
     #If yes, then process the vertical scans to calculate a value of ZDR and an estimate of the height of the melting layer. 
     #Save melting layer height and zdr values to file. Save a success file. 
     
-    file = os.path.join(outdir, day, 'day_ml_zdr.csv')
-    print(file)
+    expected_file = f'{outdir}/{day}/day_ml_zdr.csv'
+   
+    identifier = f'{YYYY}.{MM}.{DD}'
+ 
+    #If the file hasn't already been processed, or there is no rain or insufficient data, then carry on script to process the data
     
-    success_file = os.path.join(success_dir, day+'_ml_zdr.txt')
-    no_rain_file = os.path.join(no_rain_dir, day+'_no_rain.txt')
-    
-    #If there is no success file and no no_rain file, then nothing has been processed, so carry on script to process the data
-    
-    if os.path.exists(success_file):
-        print(day+"success file exists")
-    if os.path.exists(no_rain_file):
-        print(day+"no_rain file exists")
-    
-    if not os.path.exists(success_file) and not os.path.exists(no_rain_file):
-             
-        #Construct the NOAA filename based on the date
-        nfile = [wxdir + 'NOAA-' + day[0:4] + '-' + day[4:6] + '.txt']
-        #print nfile
-        #extract the day
-        dd = day[6:8]
+    if rh.ran_successfully(identifier) or rh.get_result(identifier)=='no rain' or rh.get_result(identifier)=='insufficient data':
+        print(f'[INFO] Already processed {day}')
+        continue
+     
+    #Construct the NOAA filename based on the date
+    nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
         
-        #Use pandas read_table to read the text file into a table to extract the rain amount
-        data = pd.read_table(nfile[0], sep='\s+', header=6)
-        #Set the index column
-        data2 = data.set_index("DAY")
-        #Extract rain amount for the current day
-        rain = data2.loc[dd,"RAIN"]
+    #Use pandas read_table to read the text file into a table to extract the rain amount
+    data = pd.read_table(nfile[0], sep='\s+', header=6)
+    #Set the index column
+    data2 = data.set_index("DAY")
+    #Extract rain amount for the current day
+    rain = data2.loc[dd,"RAIN"]
         
-        #If there was less than 1mm of rain, go to the next day
-        if rain < 1.0 or np.isfinite(rain)==False:
-            f=open(no_rain_file,'w')
-            f.write("")
-            f.close()
+    #If there was less than 1mm of rain, go to the next day
+    if rain < 1.0 or np.isfinite(rain)==False:
+        rh.insert_failure(identifier, 'no rain')
         #Otherwise process the day's data
         else:
             if calib_functions.process_zdr_scans(outdir,raddir,day,file,plot):       
-                f=open(success_file,'w')
-                f.write("")
-                f.close()
-                print(day+' succesfully processed')		
+                rh.ran_successfully(identifier)
             else:
-                f=open(no_rain_file,'w')
-                f.write("")
-                f.close()
-                print(day+'not enough data to process')
+                rh.insert_failure('insufficient data')
 
 def main():
     """Runs script if called on command line"""
