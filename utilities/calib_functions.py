@@ -26,7 +26,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
  
     filelist = glob.glob(raddir+date+'/*.nc')
     filelist.sort()    
-    
+    return filelist 
     ML=np.zeros(300)*np.nan;
     nvals=np.zeros(300)*np.nan;
     mean_zdr=np.zeros(300)*np.nan;
@@ -49,7 +49,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         rg = copy.deepcopy(rad.range['data']/1000)
         rg_sp = rg[1]-rg[0]
         max_gate = rg.size
-        
+        print(max_gate) 
        	try:
             rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
             uzh = copy.deepcopy(rad.fields['dBuZ']['data'])

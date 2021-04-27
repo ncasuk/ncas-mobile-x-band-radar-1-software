@@ -54,7 +54,7 @@ def process_vert_scans(args):
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
     #Directory for input radar data
-    raddir = SETTINGS.VERT_DIR
+    raddir = SETTINGS.INPUT_DIR
     
     #Directory for weather station data
     wxdir = SETTINGS.WXDIR
@@ -75,8 +75,9 @@ def process_vert_scans(args):
     identifier = f'{YYYY}.{MM}.{DD}'
  
     #If the file hasn't already been processed, or there is no rain or insufficient data, then carry on script to process the data
-    
-    if rh.ran_successfully(identifier) or rh.get_result(identifier)=='no rain' or rh.get_result(identifier)=='insufficient data':
+   
+    result=rh.get_result(identifier) 
+    if rh.ran_successfully(identifier) or result in ('no rain', 'insufficient data'):
         print(f'[INFO] Already processed {day}')
      
     else:
@@ -84,21 +85,21 @@ def process_vert_scans(args):
         nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
             
         #Use pandas read_table to read the text file into a table to extract the rain amount
-        data = pd.read_table(nfile[0], sep='\s+', header=6)
+        data = pd.read_table(nfile, sep='\s+', header=6)
         #Set the index column
         data2 = data.set_index("DAY")
         #Extract rain amount for the current day
-        rain = data2.loc[dd,"RAIN"]
+        rain = data2.loc[DD,"RAIN"]
             
         #If there was less than 1mm of rain, go to the next day
         if rain < 1.0 or np.isfinite(rain)==False:
             rh.insert_failure(identifier, 'no rain')
             #Otherwise process the day's data
         else:
-            if calib_functions.process_zdr_scans(outdir,raddir,day,file,plot):       
+            if calib_functions.process_zdr_scans(outdir,raddir,day,expected_file,plot):       
                 rh.ran_successfully(identifier)
             else:
-                rh.insert_failure('insufficient data')
+                rh.insert_failure(identifier, 'insufficient data')
     
 def main():
     """Runs script if called on command line"""
