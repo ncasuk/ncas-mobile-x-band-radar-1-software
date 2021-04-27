@@ -5,14 +5,18 @@ import os
 import argparse
 import dateutil.parser as dp
 import SETTINGS
+import sys
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=FutureWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-import utilities
+#sys.path.append('/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/utilities/')
+
+#import utilities
 from utilities import calib_functions
+#import calib_functions
 from abcunit_backend.database_handler import DataBaseHandler
 
 def arg_parse_day():
@@ -74,28 +78,28 @@ def process_vert_scans(args):
     
     if rh.ran_successfully(identifier) or rh.get_result(identifier)=='no rain' or rh.get_result(identifier)=='insufficient data':
         print(f'[INFO] Already processed {day}')
-        continue
      
-    #Construct the NOAA filename based on the date
-    nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
-        
-    #Use pandas read_table to read the text file into a table to extract the rain amount
-    data = pd.read_table(nfile[0], sep='\s+', header=6)
-    #Set the index column
-    data2 = data.set_index("DAY")
-    #Extract rain amount for the current day
-    rain = data2.loc[dd,"RAIN"]
-        
-    #If there was less than 1mm of rain, go to the next day
-    if rain < 1.0 or np.isfinite(rain)==False:
-        rh.insert_failure(identifier, 'no rain')
-        #Otherwise process the day's data
+    else:
+        #Construct the NOAA filename based on the date
+        nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
+            
+        #Use pandas read_table to read the text file into a table to extract the rain amount
+        data = pd.read_table(nfile[0], sep='\s+', header=6)
+        #Set the index column
+        data2 = data.set_index("DAY")
+        #Extract rain amount for the current day
+        rain = data2.loc[dd,"RAIN"]
+            
+        #If there was less than 1mm of rain, go to the next day
+        if rain < 1.0 or np.isfinite(rain)==False:
+            rh.insert_failure(identifier, 'no rain')
+            #Otherwise process the day's data
         else:
             if calib_functions.process_zdr_scans(outdir,raddir,day,file,plot):       
                 rh.ran_successfully(identifier)
             else:
                 rh.insert_failure('insufficient data')
-
+    
 def main():
     """Runs script if called on command line"""
 
