@@ -26,7 +26,6 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
  
     filelist = glob.glob(raddir+date+'/*.nc')
     filelist.sort()    
-    return filelist 
     ML=np.zeros(300)*np.nan;
     nvals=np.zeros(300)*np.nan;
     mean_zdr=np.zeros(300)*np.nan;
@@ -49,7 +48,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         rg = copy.deepcopy(rad.range['data']/1000)
         rg_sp = rg[1]-rg[0]
         max_gate = rg.size
-        print(max_gate) 
+        #print(max_gate) 
        	try:
             rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
             uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
@@ -159,7 +158,6 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
             #Make plot if user has requested them
             if plot==1:
-                print('graph plotted')
                	fig = plt.figure(figsize=(10,7))    
                 ax1 = fig.add_subplot(141)
                 ax1.plot(rhv_prof,rg,'kx-')
@@ -197,6 +195,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
                 #Plot and save figure 
                 plt.savefig(img_name,dpi=150)
+                print('graph plotted')
                 plt.close()
                 plt.clf()
 
@@ -211,7 +210,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
     #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
     if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
-
+        print("valid values")
         if not os.path.exists(os.path.join(outdir,date)):
             os.makedirs(os.path.join(outdir,date))
 

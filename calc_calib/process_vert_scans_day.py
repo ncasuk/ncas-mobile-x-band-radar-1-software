@@ -93,11 +93,13 @@ def process_vert_scans(args):
             
         #If there was less than 1mm of rain, go to the next day
         if rain < 1.0 or np.isfinite(rain)==False:
+            print('no rain')
             rh.insert_failure(identifier, 'no rain')
             #Otherwise process the day's data
         else:
+            print('processing day ',day)
             if calib_functions.process_zdr_scans(outdir,raddir,day,expected_file,plot):       
-                rh.ran_successfully(identifier)
+                rh.insert_success(identifier)
             else:
                 rh.insert_failure(identifier, 'insufficient data')
     

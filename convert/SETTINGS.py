@@ -34,11 +34,5 @@ BACKEND = 'db' #'db' or 'file'
 INPUT_DIR = '/gws/smf/j07/ncas_radar/raw_data/ncas-mobile-x-band-radar-1/raine'
 
 # Output directory for netcdf files (specified in the params file)
-#OUTPUT_DIR = f'/gws/nopw/j04/ncas_radar_vol2/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
-# WHILE TESTING
-#OUTPUT_DIR = f'/work/scratch-nopw/lbennett/raine/uncalib_v1'
-# WHILE TESTING
-# OUTPUT_DIR = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/test_radex_out'
-#OUTPUT_DIR = f'/gws/smf/j07/ncas_radar/data/xband/raine/cfradial/uncalib_v1'
-OUTPUT_DIR = f'/home/users/lbennett/test/'
+OUTPUT_DIR = f'/gws/smf/j07/ncas_radar/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
 

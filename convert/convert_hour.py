@@ -10,7 +10,6 @@ import subprocess
 from netCDF4 import Dataset
 #imports the databasehandler module
 from abcunit_backend.database_handler import DataBaseHandler
-from abcunit_backend.file_system_handler import FileSystemHandler
 #from convert import SETTINGS
 import SETTINGS
 
@@ -145,7 +144,7 @@ def loop_over_hours(args):
 # error types are bad_num (different number of variables in raw vs nc)
 # failure (RadxConvert doesnt complete) and bad_output (no output file found)
     #rh = _get_results_handler(4, '.')
-    rh = DataBaseHandler(table_name="convert_results")
+    rh = DataBaseHandler(table_name="convert_azi_results")
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)
