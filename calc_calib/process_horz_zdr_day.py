@@ -49,14 +49,14 @@ def process_volume_scans(args):
     #But only using dates in the ZDR directory, which are ones we know have rain
     zdr_dir = SETTINGS.ZDR_CALIB_DIR
     #Create subdirectory of ZDR directory for output data
-    outdir = os.path.join(zdr_dir,'horz/')
+    outdir = f'{zdr_dir}/horz/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
     zcorr = 0.0
 
 #    mlh, [] = extract_ml_zdr(time, ml_zdr)
-    mlfile = os.path.join(zdr_dir,date,'hourly_ml_zdr.csv')
+    mlfile = f'{zdr_dir}/{date}/hourly_ml_zdr.csv'
 
     if os.path.exists(mlfile):
         ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
@@ -66,7 +66,7 @@ def process_volume_scans(args):
             T2 = pd.to_datetime(T)
             T2=T2.tz_convert(None)
             output = pd.DataFrame({'ZDR' : medZDR18}, index=T2)
-            filename = os.path.join(outdir,date+'_horz_zdr.csv')
+            filename = f'{outdir}/{date}_horz_zdr.csv'
             output.to_csv(filename)
 
 def main():
