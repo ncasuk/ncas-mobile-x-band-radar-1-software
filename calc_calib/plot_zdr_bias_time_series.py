@@ -110,7 +110,8 @@ def plot_zdr(args):
         os.makedirs(os.path.join(outdir,'images'))
     
     #Save plot
-    img_name = os.path.join(outdir,'images','full_zdr.png')
+    img_name = f'{outdir}/images/{start_date}_{end_date}_zdr.png'
+    print(img_name)
     plt.savefig(img_name,dpi=150)
     plt.close()
 

@@ -5,6 +5,7 @@ import SETTINGS
 import utilities
 from utilities import calib_functions
 import re
+from abcunit_backend.database_handler import DataBaseHandler
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -12,17 +13,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 def make_hourly_files():
 
-    #Directory for logs
-    logdir = SETTINGS.LOG_DIR
-    success_dir = SETTINGS.SUCCESS_DIR
-    no_rain_dir = SETTINGS.NO_RAIN_DIR
-
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    if not os.path.exists(success_dir):
-        os.makedirs(success_dir)
-    if not os.path.exists(no_rain_dir):
-        os.makedirs(no_rain_dir)
+    rh = DataBaseHandler(table_name="process_hourly_zdr")
 
     #list only date directories
     inputdir = SETTINGS.ZDR_CALIB_DIR
@@ -37,20 +28,16 @@ def make_hourly_files():
 
     for date in proc_dates[0:]:
         print(date)
-        success_file = os.path.join(success_dir, date+'_hourly_ml_zdr.txt')
-        no_rain_file = os.path.join(no_rain_dir, date+'_no_hourly_rain.txt')
-
-        #If there is no 'success' file and no 'no_rain' file, then nothing has been processed, so carry on to process the data
-        if not os.path.exists(success_file) and not os.path.exists(no_rain_file):
-
+        identifier = f'{date}'
+        result=rh.get_result(identifier)
+        #If there is no 'success' identifier and no 'not enough_rain' identifier, then the file hasn't been processed, so carry on to process the data
+        if rh.ran_successfully(identifier) or result=='not enough rain':
+            print(f'[INFO] Already processed {date}')
+        else:   
             if calib_functions.calc_hourly_ML(outdir,date):
-       	        f=open(success_file,'w')
-                f.write("")
-                f.close()
+                rh.insert_success(identifier)
             else:
-                f=open(no_rain_file,'w')
-                f.write("")
-                f.close()
+                rh.insert_failure(identifier, 'not enough rain')
 
 def main():
     """Runs script if called on command line"""

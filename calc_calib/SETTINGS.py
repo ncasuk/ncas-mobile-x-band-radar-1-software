@@ -12,9 +12,12 @@ MAX_END_DATE = '20210331'
 #NO_RAIN_DIR = LOG_DIR+'no_rain/'
 #NO_RAYS_DIR = LOG_DIR+'no_rays/'
 
+#LOCATION OF SCRIPTS
+SCRIPT_DIR = f'/gws/nopw/j04/ncas_obs/amf/software/ncas-mobile-x-band-radar-1/calc_calib/'
+
 #Location for LOTUS output
 LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
-#LOTUS_DIR = '/gws/smf/j04/ncas_radar/lbennett/lotus-output/'+PROJ_NAME+'/cals/'
+LOTUS_DIR = f'{LOTUS_OUTPUT_PATH_BASE}/cals/'
 
 #Location of weather station text files with daily rain amounts
 WXDIR = f'/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-aws-2/incoming/{PROJ_NAME}/NOAA/'

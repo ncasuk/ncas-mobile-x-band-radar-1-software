@@ -3,6 +3,7 @@ import os
 import argparse
 import dateutil.parser as dp
 from datetime import date
+import subprocess
 
 def arg_parse_all():
     """
@@ -51,7 +52,7 @@ def loop_over_days(args):
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
  
-    proc_dates = os.listdir(SETTINGS.VERT_DIR)
+    proc_dates = os.listdir(SETTINGS.INPUT_DIR)
     proc_dates.sort()
     
     current_directory = os.getcwd()  # get current working directory
@@ -65,9 +66,9 @@ def loop_over_days(args):
             # command to submit to lotus
             sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
                              f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
-                             f"--wrap=\"python {current_directory}/process_vert_scans_day.py {day} {plot}\""
+                             f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_vert_scans_day.py -d {day} -p {plot}\""
     
-            #subprocess.call(sbatch_command, shell=True)
+            subprocess.call(sbatch_command, shell=True)
     
             print(f"running {sbatch_command}")
    
