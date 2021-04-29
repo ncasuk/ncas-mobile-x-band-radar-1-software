@@ -89,7 +89,7 @@ def plot_zdr(args):
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
     #Save plot
-    img_name = os.path.join(img_dir,'full_horz_zdr.png')
+    img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr.png'
     plt.savefig(img_name,dpi=150)
     plt.close()
 

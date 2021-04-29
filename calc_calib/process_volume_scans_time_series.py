@@ -4,6 +4,7 @@ import re
 import argparse
 import dateutil.parser as dp
 from datetime import date
+import subprocess
 
 def arg_parse_all():
     """
@@ -57,7 +58,6 @@ def loop_over_days(args):
     pattern = re.compile(r'(\d{8})')
     proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]
     proc_dates.sort()
-    current_directory = os.getcwd()  # get current working directory
 
     for day in proc_dates:
         day_dt=dp.parse(day);
@@ -67,10 +67,10 @@ def loop_over_days(args):
     
             # command to submit to lotus
             sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
-                             f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
-                             f"--wrap=\"python {current_directory}/process_volume_scans_day.py {day}\""
+                             f"{SETTINGS.LOTUS_DIR}{today}/{day}_Z.out -e {SETTINGS.LOTUS_DIR}{today}/{day}_Z.err "\
+                             f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_volume_scans_day.py -d {day}\""
     
-            #subprocess.call(sbatch_command, shell=True)
+            subprocess.call(sbatch_command, shell=True)
     
             print(f"running {sbatch_command}")
    

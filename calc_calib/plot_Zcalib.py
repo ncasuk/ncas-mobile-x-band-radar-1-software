@@ -211,7 +211,7 @@ def plot_zcalib(args):
 #    plt.xlim(start_date_dt,end_date_dt)
 
     #Save the plot
-    imgname = os.path.join(img_dir,'Z_calibration_test.png')
+    imgname = f'{img_dir}/Z_calibration_{start_date}_{end_date}.png'
     plt.tight_layout()
     plt.savefig(imgname,dpi=150)        
             

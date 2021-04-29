@@ -8,6 +8,7 @@ import re
 import utilities
 from utilities import calib_functions
 import SETTINGS
+from abcunit_backend.database_handler import DataBaseHandler
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -55,52 +56,31 @@ def process_volume_scans(args):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    #Directory for logs
-    logdir = SETTINGS.LOG_DIR
-    success_dir = SETTINGS.SUCCESS_DIR
-    no_rays_dir = SETTINGS.NO_RAYS_DIR
+    rh = DataBaseHandler(table_name="process_vol_scans")
 
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    if not os.path.exists(success_dir):
-        os.makedirs(success_dir)
-    if not os.path.exists(no_rays_dir):
-        os.makedirs(no_rays_dir)
+    identifier = f'{date}'
 
-    #print(date)
-    success_file = os.path.join(success_dir, date+'_Z.txt')
-    no_rays_file = os.path.join(no_rays_dir, date+'_Z.txt')
+    #If there is no success or a no_rays identifier, continue to process the data
+    result=rh.get_result(identifier) 
+    if rh.ran_successfully(identifier) or result=='no rays':
+        print(f'[INFO] Already processed {date}')
 
-    #If there is a success file or a no_rays file, write out to log file
-    if os.path.exists(success_file):
-        print("already processed, success file found")
-    elif os.path.exists(no_rays_file):
-        print("already processed, no_rays file found")
-
-    #If there is no 'success' file and no 'no_rays' file, then nothing has been processed, so carry on to process the data
-    if not os.path.exists(success_file) and not os.path.exists(no_rays_file):
-        print("no success or no_rays file found")
-        mlfile = os.path.join(zdrdir, date, 'hourly_ml_zdr.csv')
+    else:
+        mlfile = f'{zdrdir}/{date}/hourly_ml_zdr.csv'
         if os.path.exists(mlfile):
-            print("found ml_file, processing data")
+            print("found ml file, processing data")
             ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
             raddir = os.path.join(inputdir, date)
             #print raddir, outdir, date
             if calib_functions.calibrate_day_att(raddir, outdir, date, ml_zdr):
-                f=open(success_file,'w')
-                f.write("")
-                f.close()
-                print("written success file")
+                rh.insert_success(identifier)
+                print("File successfully processed")
             else:
-                f=open(no_rays_file,'w')
-                f.write("")
-                f.close()
-                print("written no_rays file")
+                rh.insert_failure(identifier, 'no suitable rays')
+                print("No suitable rays")
         else:
-            f=open(no_rays_file,'w')
-            f.write("")
-            f.close()
-            print("no hourly ml file, nothing to process")
+            rh.insert_failure(identifier, 'no hourly ml file')
+            print("No hourly ml file")
 
 def main():
     """Runs script if called on command line"""
