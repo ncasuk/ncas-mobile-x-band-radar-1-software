@@ -32,6 +32,8 @@ def arg_parse():
     parser.add_argument('-e', '--end_date', nargs='?', default=SETTINGS.MAX_END_DATE,
                         type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
+    parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
+                        help=f'Make plots of the profiles if p is set to 1',metavar='')
     
     return parser.parse_args()
 
@@ -44,6 +46,7 @@ def plot_zdr(args):
     parsed from command line
     """
 
+    plot=args.make_plots[0]
     start_date = args.start_date
     end_date = args.end_date
 
@@ -65,6 +68,9 @@ def plot_zdr(args):
         file = filelist[f]
         data = pd.read_csv(file,index_col=0, parse_dates=True)
         all_data = pd.concat([all_data, data])
+    
+    median_bias=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
+    print('Median Bias for whole period = ',median_bias)
     zdr_med = all_data.resample('D').median()
     zdr_std = all_data.resample('D').std()
 
@@ -77,7 +83,7 @@ def plot_zdr(args):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
     plt.xticks(rotation=90)
-    plt.ylim([-1, 2])
+    plt.ylim([-0.5, 1])
     plt.xlim([start_date_dt,end_date_dt])
     
     plt.ylabel('Horizontal ZDR Bias (dB)', fontsize=18)
@@ -89,9 +95,10 @@ def plot_zdr(args):
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
     #Save plot
-    img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr.png'
-    plt.savefig(img_name,dpi=150)
-    plt.close()
+    if plot==1:
+        img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr.png'
+        plt.savefig(img_name,dpi=150)
+        plt.close()
 
 def main():
     """Runs script if called on command line"""

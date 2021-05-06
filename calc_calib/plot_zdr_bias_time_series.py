@@ -35,6 +35,8 @@ def arg_parse():
     parser.add_argument('-e', '--end_date', nargs='?', default=SETTINGS.MAX_END_DATE,
                         type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
+    parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
+                        help=f'Make plots of the profiles if p is set to 1',metavar='')
     
     return parser.parse_args()
 
@@ -47,6 +49,7 @@ def plot_zdr(args):
     parsed from command line
     """
 
+    plot=args.make_plots[0]
     start_date = args.start_date
     end_date = args.end_date
 
@@ -84,7 +87,9 @@ def plot_zdr(args):
                 all_hourly_data = pd.concat([all_hourly_data, data2])
                 zdr_day_avg2 = all_hourly_data.resample('D').mean()
                 zdr_std2 = all_hourly_data.resample('D').std()
-    
+   
+    median_bias=np.nanmedian(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
+    print('Median Bias for whole period = ',median_bias) 
     #(3) Make a plot showing time series of ZDR for chosen period
     
     fig,ax1=plt.subplots(figsize=(15,8))
@@ -105,15 +110,19 @@ def plot_zdr(args):
     
     monthyearFmt = mdates.DateFormatter('%d-%m-%y')
     ax1.xaxis.set_major_formatter(monthyearFmt)
+
+    plt.plot([start_date_dt, end_date_dt],[median_bias,median_bias],'r-',
+                      label="Median Bias = %s" % round(median_bias,2))
     
     if not os.path.exists(os.path.join(outdir,'images')):
         os.makedirs(os.path.join(outdir,'images'))
     
     #Save plot
-    img_name = f'{outdir}/images/{start_date}_{end_date}_zdr.png'
-    print(img_name)
-    plt.savefig(img_name,dpi=150)
-    plt.close()
+    if plot==1:
+        img_name = f'{outdir}/images/{start_date}_{end_date}_zdr.png'
+        print(img_name)
+        plt.savefig(img_name,dpi=150)
+        plt.close()
 
 def main():
     """Runs script if called on command line"""
