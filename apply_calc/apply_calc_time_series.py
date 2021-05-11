@@ -45,12 +45,13 @@ def loop_over_days(args):
     :param args: (namespace) Namespace object built from arguments parsed from command line
     """
     today = date.today().strftime("%Y-%m-%d")
-    current_directory = os.getcwd()
+    print('today= ',today)
+    script_dir=SETTINGS.SCRIPT_DIR
 
     scan_type = args.scan_type[0]
     params_index = args.params_index[0]
     input_dir = os.path.join(SETTINGS.INPUT_DIR, scan_type) 
-    params_file = SETTINGS.PARAMS_FILE+params_index
+    #params_file = f'{SETTINGS.PARAMS_FILE}{params_index}'
 
     #How many files to process in each chunk. Approx 10 files each hour.   
     chunk_hours=SETTINGS.CHUNK_HOURS
@@ -84,27 +85,35 @@ def loop_over_days(args):
                 if start_date_dt <= filetime_dt and end_date_dt >= filetime_dt:
                     files.append(each)
     print('number of files = ', len(files))
-    print(files)
+    files.sort()
+    #print(files)
+    
+    lotus_logs=f'{SETTINGS.LOTUS_DIR}{today}'    
+    if not os.path.exists(lotus_logs):
+        os.makedirs(lotus_logs)
+
     chunk_index=0
 
     for file_chunk in chunks(files,chunk_size):
+        file_list=' '.join(file_chunk)
         first_file = file_chunk[0]
         D=os.path.basename(first_file).split('_')[2]
         # command to submit to lotus
         sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK}" \
-                         f" -o {SETTINGS.LOTUS_DIR}{today}/{D}_{chunk_index}.out" \
-                         f" -e {SETTINGS.LOTUS_DIR}{today}/{D}_{chunk_index}.err" \
-                         f"--wrap=\"python {current_directory}/apply_calc_chunk.py \
-                                -p {params_file} -f {file_chunk} -t {scan_type}\""
+                         f" -o {lotus_logs}/{D}_{chunk_index}.out" \
+                         f" -e {lotus_logs}/{D}_{chunk_index}.err" \
+                         f" --wrap=\"python {script_dir}/apply_calc_chunk.py \
+                                -p {params_index} -f {file_list} -t {scan_type}\""
 
-        file_list=' '.join(file_chunk)
-        py_command = f"python {current_directory}/apply_calc_chunk.py -p {params_file} -f {file_list} -t {scan_type}"
+        #print(file_list)
+        #py_command = f"python {script_dir}/apply_calc_chunk.py -p {params_file} -f {file_list} -t {scan_type}"
     
-        #subprocess.call(sbatch_command, shell=True)
-       # print(f"running {sbatch_command}")
+        print(f"running {chunk_index}")
+        #print(f"running {sbatch_command}")
+        subprocess.call(sbatch_command, shell=True)
 
-        print(f"running {py_command}")
-        subprocess.call(py_command, shell=True)
+        #print(f"running {py_command}")
+        #subprocess.call(py_command, shell=True)
     
         chunk_index=chunk_index+1
         
