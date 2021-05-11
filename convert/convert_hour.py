@@ -238,7 +238,7 @@ def loop_over_hours(args):
             # If all of the above is succesful, create a success identifier
             rh.insert_success(identifier)
 
-    rh.close()
+    #rh.close()
 
 
 def main():

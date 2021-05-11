@@ -9,13 +9,13 @@ MIN_START_DATE = '20181025'
 MAX_END_DATE = '20201231'
 
 # LOTUS settings
-QUEUE = 'short-serial'
+QUEUE = 'short-serial-4hr'
 WALL_CLOCK = '40:00'
 
 # Number of hours passed to convert_hour.py at a time
 CHUNK_SIZE = 6
 
-# Radex convert params file
+# Radx convert params file
 PARAMS_FILE=f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.{PROJ_NAME}.uncalib'
 # WHILE TESTING
 # PARAMS_FILE = '/home/users/jhaigh0/work/abcunit-radar/ncas-mobile-x-band-radar-1-software/convert/test/RadxConvert.raine.uncalib'
