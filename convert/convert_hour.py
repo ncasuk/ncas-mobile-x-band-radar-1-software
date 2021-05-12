@@ -4,6 +4,7 @@ import argparse
 import dateutil.parser as dp
 import glob
 import os
+import pyart
 import re
 import subprocess
 
@@ -144,7 +145,7 @@ def loop_over_hours(args):
 # error types are bad_num (different number of variables in raw vs nc)
 # failure (RadxConvert doesnt complete) and bad_output (no output file found)
     #rh = _get_results_handler(4, '.')
-    rh = DataBaseHandler(table_name="convert_azi_results")
+    rh = DataBaseHandler(table_name="convert_results")
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)
@@ -211,22 +212,27 @@ def loop_over_hours(args):
 
             # Read netcdf file to find variables
             # If the file can't be found, create a bad_output failure identifier
-            found_vars = None
+            #found_vars = None
             try:
-                ds = Dataset(expected_file, 'r', format="NETCDF4")
-                found_vars = set(ds.variables.keys())
-                ds.close()
+                 rad2=pyart.io.read(expected_file, delay_field_loading=True)
+#                ds = Dataset(expected_file, 'r', format="NETCDF4")
+#                found_vars = set(ds.variables.keys())
+#                ds.close()
             except FileNotFoundError:
                 print(f'[ERROR] Expected file {expected_file} not found')
                 rh.insert_failure(identifier, 'bad_output')
                 failure_count += 1
                 continue
+            else:
+                output_vars=set(rad2.fields.keys())
 
             print('[INFO] Checking that the output variables match those in the input files')
+            #print('expected vars = ', expected_vars)
+            #print('output_vars = ', output_vars)
 
             #Checks that the variables in the nc file are identical to the variables in the input files
             #If not, create a failure identifier called bad_num
-            if not expected_vars.issubset(found_vars):
+            if not expected_vars.issubset(output_vars):
                 print('[ERROR] Output variables are not the same as input files'
                       f'{found_vars} != {expected_vars}')
                 failure_count += 1
