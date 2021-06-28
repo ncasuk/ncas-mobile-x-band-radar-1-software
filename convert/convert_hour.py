@@ -145,7 +145,7 @@ def loop_over_hours(args):
 # error types are bad_num (different number of variables in raw vs nc)
 # failure (RadxConvert doesnt complete) and bad_output (no output file found)
     #rh = _get_results_handler(4, '.')
-    rh = DataBaseHandler(table_name="convert_results")
+    rh = DataBaseHandler(table_name="convert_ele_results")
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)
@@ -234,7 +234,7 @@ def loop_over_hours(args):
             #If not, create a failure identifier called bad_num
             if not expected_vars.issubset(output_vars):
                 print('[ERROR] Output variables are not the same as input files'
-                      f'{found_vars} != {expected_vars}')
+                      f'{output_vars} != {expected_vars}')
                 failure_count += 1
                 rh.insert_failure(identifier, 'bad_num')
                 continue
