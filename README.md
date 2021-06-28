@@ -1,9 +1,7 @@
 # ncas-mobile-x-band-radar-1-software
 
-"raine" and "chilbolton" directories contains all the scripts and files that were used to do the following:
---convert the vol files to cfradial netcdfs
---process the netcdfs to calculate biases for ZDR and Z for individual days
---notebooks to plot the output and determine biases for the whole project
---apply the calibration offsets to the data
+"raine" and "chilbolton" directories contain the scripts and files that were used to process these datasets using bash scripts before the evolution to python routines. 
 
-"docs" contains the pdfs to describe the methodology used for the processing: conversion, calculating calibration values and applying calibration values. The calibration methodology itself is described in separate documents.
+convert, calc_calib, apply_calib and utilities contain the current versions of python scripts and functions used to process the radar data. 
+
+"docs" contains the pdfs to describe the processing workflow of conversion, calculating calibration values and applying calibration values, as well as the calibration methodology itself.
