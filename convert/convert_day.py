@@ -26,6 +26,7 @@ def arg_parse_day():
                         help=f'Date to find scans from, fromat YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}',
                         metavar='')
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
 
     return parser.parse_args()
 
@@ -41,6 +42,7 @@ def loop_over_chunks(args):
 
     scan_type = args.scan_type[0]
     date = args.date[0]
+    table = args.table_name[0]
 
     try:
         day_date_time = dp.isoparse(date)
@@ -96,7 +98,7 @@ def loop_over_chunks(args):
                         f" -o {output_base}.out" \
                         f" -e {output_base}.err" \
                         f" --wrap=\"python {script_directory}/convert_hour.py \
-                           -t {scan_type} {' '.join(hours)}\""
+                           -t {scan_type} {' '.join(hours)} -n {table}\""
         print(f"[INFO] Running: {slurm_command}")
         subprocess.call(slurm_command, shell=True)
 

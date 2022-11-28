@@ -33,6 +33,8 @@ def arg_parse_hour():
     parser.add_argument('hours', nargs='+', type=str, help='The hours you want '
                         'to run in the format YYYYMMDDHH', metavar='')
 
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
+
     return parser.parse_args()
 
 
@@ -93,15 +95,17 @@ def _get_input_files(hour, scan_type):
     pattern = re.compile(f"^.*_.*.{scan_type}$")
 
     filtered_dirs = [os.path.join(files_path, name) for name in dirs if pattern.match(name)]
+    #print(filtered_dirs) 
     dbz_files = []
 
     for dr in filtered_dirs:
         target_dir = f'{dr}/{date_dir}'
+        #print(target_dir)
         if os.path.exists(target_dir):
+            #print(target_dir)
             files = os.listdir(target_dir)
             pattern = re.compile(f"^{hour}.*dBZv.{scan_type}$")
             dbz_files.extend([os.path.join(target_dir, fname) for fname in files if pattern.match(fname)])
-
     return sorted(set(dbz_files))
 
 
@@ -141,11 +145,13 @@ def loop_over_hours(args):
 
     scan_type = args.scan_type[0]
     hours = args.hours
+    table = args.table_name[0]
 
 # error types are bad_num (different number of variables in raw vs nc)
 # failure (RadxConvert doesnt complete) and bad_output (no output file found)
     #rh = _get_results_handler(4, '.')
-    rh = DataBaseHandler(table_name="convert_ele_results")
+    #rh = DataBaseHandler(table_name=table)
+    rh = DataBaseHandler(table_name=table)
 
     failure_count = 0
     mapped_scan_type = _map_scan_type(scan_type)
@@ -208,7 +214,7 @@ def loop_over_hours(args):
 
             # This should probably be a default path that is formatted
             expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \
-                            f'ncas-mobile-x-band-radar-1_sandwith_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
+                            f'ncas-mobile-x-band-radar-1_chilbolton_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
 
             # Read netcdf file to find variables
             # If the file can't be found, create a bad_output failure identifier

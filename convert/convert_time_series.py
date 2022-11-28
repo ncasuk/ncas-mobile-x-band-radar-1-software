@@ -29,6 +29,7 @@ def arg_parse_all():
                         default=SETTINGS.MAX_END_DATE,
                         help=f'End date in the format YYYYMMDD, {SETTINGS.MAX_END_DATE} at the latest',
                         metavar='')
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
 
     return parser.parse_args()
 
@@ -45,6 +46,7 @@ def loop_over_days(args):
     scan_type = args.scan_type[0]
     start_date = args.start[0]
     end_date = args.end[0]
+    table = args.table_name[0]
 
     # validate dates
     try:
@@ -64,7 +66,7 @@ def loop_over_days(args):
         current_date = current_date_time.strftime("%Y%m%d")
         print(f"[INFO] Running for: {current_date}")
 
-        cmd = f"python {script_directory}/convert_day.py -t {scan_type} -d {current_date}"
+        cmd = f"python {script_directory}/convert_day.py -t {scan_type} -d {current_date} -n {table}"
         print(f"[INFO] Running: {cmd}")
         subprocess.call(cmd, shell=True)
 

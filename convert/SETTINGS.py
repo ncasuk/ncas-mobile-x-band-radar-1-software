@@ -1,15 +1,15 @@
 # Project Choice
-PROJ_NAME = 'raine'
+PROJ_NAME = 'chilbolton'
 
 # Maximum number of failures before convert_hour.py raises an error
 EXIT_AFTER_N_FAILURES = 1000000
 
 # Range in which there is data for the project
-MIN_START_DATE = '20181025'
-MAX_END_DATE = '20201231'
+MIN_START_DATE = '20220401'
+MAX_END_DATE = '20220831'
 
 # LOTUS settings
-QUEUE = 'short-serial-4hr'
+QUEUE = 'short-serial-4hr --account=short4hr'
 WALL_CLOCK = '40:00'
 
 # Number of hours passed to convert_hour.py at a time
@@ -30,8 +30,8 @@ LOTUS_OUTPUT_PATH = LOTUS_OUTPUT_PATH_BASE + "/{year}/{month}/{day}"
 BACKEND = 'db' #'db' or 'file'
 
 # Top level directory for raw data
-#INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/raine'
-INPUT_DIR = '/gws/smf/j07/ncas_radar/raw_data/ncas-mobile-x-band-radar-1/raine'
+INPUT_DIR = '/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-mobile-x-band-radar-1/incoming/rawdata'
+#INPUT_DIR = '/gws/smf/j07/ncas_radar/raw_data/ncas-mobile-x-band-radar-1/raine'
 
 # Output directory for netcdf files (specified in the params file)
 OUTPUT_DIR = f'/gws/smf/j07/ncas_radar/data/xband/{PROJ_NAME}/cfradial/uncalib_v1'
