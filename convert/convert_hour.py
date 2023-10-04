@@ -214,7 +214,7 @@ def loop_over_hours(args):
 
             # This should probably be a default path that is formatted
             expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_dir_name}/{date}/' \
-                            f'ncas-mobile-x-band-radar-1_chilbolton_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
+                            f'{SETTINGS.RADAR_LONG}_{SETTINGS.PLATFORM}_{date}-{time_digits}_{mapped_scan_type}_v1.nc'
 
             # Read netcdf file to find variables
             # If the file can't be found, create a bad_output failure identifier
