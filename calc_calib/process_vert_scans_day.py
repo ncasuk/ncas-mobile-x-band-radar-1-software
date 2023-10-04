@@ -45,8 +45,10 @@ def process_vert_scans(args):
 
     plot=args.make_plots[0]
     day=args.date[0]
+    #print(day)
     YYYY, MM, DD = day[:4], day[4:6], day[6:8]
     day_dt = dp.parse(day)
+    #print('day_dt = ', day_dt)
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
 
@@ -81,16 +83,24 @@ def process_vert_scans(args):
         print(f'[INFO] Already processed {day}')
      
     else:
-        #Construct the NOAA filename based on the date
-        nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
+#        #Construct the NOAA filename based on the date
+#        nfile = f'{wxdir}NOAA-{YYYY}-{MM}.txt'
+        
+        #Construct the AWS filename based on the date
+        nfile = f'{wxdir}{YYYY}-{MM}_rain.csv'
             
-        #Use pandas read_table to read the text file into a table to extract the rain amount
-        data = pd.read_table(nfile, sep='\s+', header=6)
+#        #Use pandas read_table to read the text file into a table to extract the rain amount
+#        data = pd.read_table(nfile, sep='\s+', header=6)
+        data=pd.read_csv(nfile,parse_dates=True,index_col=0, dayfirst=True)       
+ 
         #Set the index column
-        data2 = data.set_index("DAY")
+#        data2 = data.set_index("DAY")
         #Extract rain amount for the current day
-        rain = data2.loc[DD,"RAIN"]
-            
+#        rain = data2.loc[DD,"RAIN"]
+        dateP = day[0:4]+'-'+day[4:6]+'-'+day[6:8]
+        #print(dateP)
+        rain = data.loc[dateP,"RAIN"]
+        #print(rain)    
         #If there was less than 1mm of rain, go to the next day
         if rain < 1.0 or np.isfinite(rain)==False:
             print('no rain')

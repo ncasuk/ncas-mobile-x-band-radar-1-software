@@ -64,7 +64,7 @@ def loop_over_days(args):
             print(day)
     
             # command to submit to lotus
-            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
+            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} --account=short4hr -t {SETTINGS.WALLCLOCK} -o " \
                              f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
                              f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_vert_scans_day.py -d {day} -p {plot}\""
     
