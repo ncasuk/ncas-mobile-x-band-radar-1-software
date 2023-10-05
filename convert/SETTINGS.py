@@ -15,11 +15,12 @@ EXIT_AFTER_N_FAILURES = 1000000
 
 # Range in which there is data for the project
 MIN_START_DATE = '20230501'
-MAX_END_DATE = '20230901'
+MAX_END_DATE = '20230930'
 
 # LOTUS settings
 QUEUE = 'short-serial-4hr --account=short4hr'
-WALL_CLOCK = '40:00'
+MAX_RUNTIME = '04:00:00'
+EST_RUNTIME = '01:00:00'
 
 # Number of hours passed to convert_hour.py at a time
 CHUNK_SIZE = 6

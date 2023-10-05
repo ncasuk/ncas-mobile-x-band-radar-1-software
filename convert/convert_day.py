@@ -94,7 +94,7 @@ def loop_over_chunks(args):
 #        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK} -o {output_base}.out " \
 #                        f"-e {output_base}.err {script_directory}/convert_hour.py " \
 #                        f"-t {scan_type} {' '.join(hours)}"
-        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALL_CLOCK}" \
+        slurm_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.MAX_RUNTIME}" \
                         f" -o {output_base}.out" \
                         f" -e {output_base}.err" \
                         f" --wrap=\"python {script_directory}/convert_hour.py \
