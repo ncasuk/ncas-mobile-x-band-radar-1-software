@@ -32,6 +32,8 @@ def arg_parse_day():
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
                         help=f'Make plots of the profiles if p is set to 1',metavar='')
+
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
     
     return parser.parse_args()
 
@@ -45,6 +47,7 @@ def process_vert_scans(args):
 
     plot=args.make_plots[0]
     day=args.date[0]
+    table = args.table_name[0]
     #print(day)
     YYYY, MM, DD = day[:4], day[4:6], day[6:8]
     day_dt = dp.parse(day)
@@ -66,7 +69,7 @@ def process_vert_scans(args):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
-    rh = DataBaseHandler(table_name="process_vert_scans")
+    rh = DataBaseHandler(table_name=table)
     
     #For given day of radar data, look to see if rain was observed by the weather station at the site. 
     #If yes, then process the vertical scans to calculate a value of ZDR and an estimate of the height of the melting layer. 
@@ -100,7 +103,7 @@ def process_vert_scans(args):
         dateP = day[0:4]+'-'+day[4:6]+'-'+day[6:8]
         #print(dateP)
         rain = data.loc[dateP,"RAIN"]
-        #print(rain)    
+        print(rain)    
         #If there was less than 1mm of rain, go to the next day
         if rain < 1.0 or np.isfinite(rain)==False:
             print('no rain')

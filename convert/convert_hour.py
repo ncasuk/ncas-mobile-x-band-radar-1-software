@@ -176,7 +176,7 @@ def loop_over_hours(args):
             
             #This is the file identifier used in the database
             identifier = f'{year}.{month}.{day}.{os.path.splitext(fname)[0]}'
-
+            print(identifier)
             # Check if this file has already been processed successfully
             #If yes, then go to the next iteration of the loop, i.e. next file
             if rh.ran_successfully(identifier):

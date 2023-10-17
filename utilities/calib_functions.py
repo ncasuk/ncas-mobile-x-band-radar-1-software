@@ -12,6 +12,10 @@ import glob
 import gc
 import copy
 import os
+import scipy as scipy
+from scipy import signal
+#import peakdetect
+#from peakdetect import peakdet
 
 plt.switch_backend('agg')
 
@@ -26,8 +30,9 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
  
     filelist = glob.glob(raddir+date+'/*.nc')
     filelist.sort()    
-    ML=np.zeros(300)*np.nan;
-    nvals=np.zeros(300)*np.nan;
+    MLB=np.zeros(300)*np.nan;
+    TopRain=np.zeros(300)*np.nan;
+    nvals=np.zeros(301)*np.nan;
     mean_zdr=np.zeros(300)*np.nan;
     med_zdr=np.zeros(300)*np.nan;
     std_zdr=np.zeros(300)*np.nan;
@@ -46,19 +51,43 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         radh = copy.deepcopy(rad.altitude['data'])
         az = copy.deepcopy(rad.azimuth['data'])
         rg = copy.deepcopy(rad.range['data']/1000)
+        ind=rg<0.36
+        rg[ind]=np.nan
+                #ax2b.set_ylim([0, peak+2])
+        #Height above sea level
+        rg=rg+radh/1000
+        rg2=rg
         rg_sp = rg[1]-rg[0]
         max_gate = rg.size
         #print(max_gate) 
+
        	try:
             rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
+            rhohv[rhohv.mask]=np.nan
+            rhohv=rhohv.data
             uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
+            uzh[uzh.mask]=np.nan
+            uzh=uzh.data
             zdru = copy.deepcopy(rad.fields['ZDRu']['data'])
-            v = copy.deepcopy(rad.fields['Vu']['data'])
-            v2 = copy.deepcopy(rad.fields['Vu']['data'])
+            zdru[zdru.mask]=np.nan
+            zdru=zdru.data
+            #RV for radial velocity
+            rv = copy.deepcopy(rad.fields['V']['data'])
+            rv[rv.mask]=np.nan
+            rv=rv.data
+            rv2 = copy.deepcopy(rad.fields['V']['data'])
+            rv2[rv2.mask]=np.nan
+            rv2=rv2.data
 
        	except:
             print("Couldn't load all variables")    
             continue
+
+        rhohv[:,ind]=np.nan
+        uzh[:,ind]=np.nan
+        zdru[:,ind]=np.nan
+        rv[:,ind]=np.nan
+        rv2[:,ind]=np.nan
 
         #Create time array
         time = rad.metadata['start_datetime']
@@ -66,6 +95,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         mm = float(time[14:16])
         ss = float(time[17:19])
         T[F] = hh + mm/60.0 + ss/3600.0
+        T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
         daystr = time[0:4]+time[5:7]+time[8:10]
        
         #Create string for timestamp 
@@ -79,144 +109,231 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         else:
             timestr = str(int(hh)) + str(int(mm))
 
-        #Create image filename 
-        img_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
-        if os.path.exists(img_name):
-            continue
-
-        #Simple unfolding method for velocity profile
-       	ind = v>6.0
-        v2[ind] = -7.9725 - (7.9725-v[ind])
-
-        #Calculate mean values of all azimuths for each range step 
         rhv_prof = np.nanmean(rhohv,axis=0)
-        uzh_prof = np.nanmean(uzh,axis=0)
-        v_prof = np.nanmean(v2,axis=0)
+        uzh_lin= 10**(uzh/10)
+        uzh_lin_prof = np.nanmean(uzh_lin,axis=0)
+        uzh_prof = 10*np.log10(uzh_lin_prof)
+        rv_prof = np.nanmean(rv2,axis=0)
         zdru_prof = np.nanmean(zdru,axis=0)
 
         #Threshold the data to select regions of rain
-        ind = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  v_prof <- 2))
-
-        #Check if any of the data fit the criteria
-        #If no, skip to next iteration of the loop i.e. next file
-        if np.sum(ind==True)==0:
+        ind1 = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  uzh_prof < 30, rv_prof <- 2))
+        
+        #Find data that meets these criteria, which are a good indication of rain. It will also find areas above the melting later, 
+        #as snow has similar characteristics
+              
+        #If no data exists, skip to next iteration of the loop i.e. next file
+        if np.sum(ind1==True)==0:
+            print('no data meets criteria')
             continue
 
         #Find index of good data
-        i = np.where(ind==True)
-        
+        i = np.where(ind1==True)
+
         #Find starting point, lowest rain gate
         ind2 = i[0][0]
         if rg[ind2]>1.0:
             print('lowest point is above 1km')
             continue       
- 
-        #Find bottom of the melting layer, i.e. top of the rain by finding gaps in the good data
-        #First check if there are any gaps
-	#Find data gaps greater than 8 points. If size==0 then there arent any gaps, so use the top point of the selected data
-        if np.where(np.diff(i[0])>8)[0].size == 0:
-            ind3=i[0][-1]            
-        else:
-            ind3 = i[0][np.where(np.diff(i[0])>8)[0][0]]+1                        
+
+        #Normalize Z and RhoHV profiles, and combine
+        Znorm = (uzh_prof - -10)/70       #-10 to 60
+        Znorm[Znorm<0]=0
+        Znorm[Znorm>1]=1
         
-        #If the section of data is less than 0.48km (16*0.03) then skip to next volume
-        if ind3-ind2<16:
+        Rnorm = (rhv_prof - 0.85)/0.15    #0.85 to 1
+        Rnorm[Rnorm<0]=0
+        Rnorm[Rnorm>1]=1
+        
+        #Calculate the vertical gradient of radial velocity to use as an indication for the base of the melting layer.
+        grad_RV = np.gradient(rv_prof)
+        
+        #Normalized gradRV
+        #gradRV_norm = (grad_RV - -0.5)/ 1  #-0.5 to 1
+        gradRV_norm = (grad_RV - np.nanmin(grad_RV))/ (np.nanmax(grad_RV)-np.nanmin(grad_RV))  #min to max
+    
+        #Combined profile, using normalised profiles of dBZ, 1-rhohv and gradient of RV 
+        P26=Znorm*(1-Rnorm)*(gradRV_norm)      
+        #First derivative of P26
+        P26d = np.gradient(P26)
+        #Second derivative of P26
+        P26dd = np.gradient(P26d)
+        #Enhanced profile
+        P26_E = P26 - (0.75*P26dd)
+    
+        #Find peaks in the profile
+        all_peaks = scipy.signal.find_peaks(P26_E,0.05)
+        #print(all_peaks)
+        peaks=all_peaks[0]
+        #print('height of peaks = ', rg[peaks])
+    
+        #Limit ML peaks to below 4km
+        r1=rg[peaks]<4
+        peaks=peaks[r1]
+        
+        #If the array is empty there are no peaks, move to next file
+        if peaks.size==0:
+            print('no peaks found')
+            continue
+        #If there is a single value, find the index
+        elif peaks.size==1:
+            print('peak found')
+            peak_ind = peaks[0]    
+        #If there is more than one value, find the largest peak, below 4km, and its index
+        elif peaks.size>1:   
+            print('more than one peak found')
+            p1=np.where(P26_E[peaks]==np.max(P26_E[peaks]))[0][0]
+            peak_ind=peaks[p1]
+        
+        #Find the index and rg of the peak
+        peak=rg[peak_ind]
+        #print('peak_ind = ', peak_ind, ' peak height = ', peak)
+    
+        #Find the inverse peaks (valleys) to find the MLT and MLB (i.e boundaries of the melting layer)
+        bounds = scipy.signal.find_peaks(-P26_E)
+        bounds = bounds[0]
+        
+        ubounds = bounds[np.where(bounds-peak_ind>0)]
+        lbounds = bounds[np.where(bounds-peak_ind<0)]
+    
+        #print(bounds-peak_ind)
+        #If there are no positive values for the difference between the peak and values of bounds, 
+        #this implies there is no MLT, skip to next file  
+        if np.sum(bounds-peak_ind>0)==0:
+            print('no MLT found')
+            continue
+        #If there are no negative values for the difference between the peak and values of bounds, 
+        #this implies there is no MLB, skip to next file    
+        if np.sum(bounds-peak_ind<0)==0:
+            print('no MLB found')
+            continue
+    
+        #MLT_ind = ubounds[0]
+        MLB_ind = lbounds[-1]
+        i=0
+        while P26_E[MLB_ind]>0.05:
+            i=i+1
+            MLB_ind=lbounds[-1-i]    
+        
+        #Now extract data below MLB that fits the criteria for rain determined earlier (ind1)
+        x1=np.where(ind1==True)[0]
+        ind_rain = x1[np.where(x1<MLB_ind)] 
+    
+        #Find data gaps greater than 8 points. There could be points of good data separated by areas where the criteria isn't met. 
+        #If size>0 then there are gaps in the section of good data, so we need to extract the lowest section
+        # if np.where(np.diff(ind_rain)>=8)[0].size==0:
+        #     print('no gaps')
+        # else:
+        #     gaps= np.where(np.diff(ind_rain)>=8)[0][0]
+        #     #if gaps.size > 0:
+        #     ind_rain = ind_rain[0:gaps+1]
+        
+        #If the section of data is less than 0.25km (8*0.03) then skip to next volume
+        if len(ind_rain)<8:
+            print('Insufficient data')
+            continue
+
+        #Height of the top of the rain
+        TopRain[F] = rg[ind_rain[-1]]
+
+        #Create image filename 
+        img_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
+        if os.path.exists(img_name):
+            print('File already processed, image created')
             continue
 
         #Count the number of data points
-        nvals[F] = ind3-ind2+1
+        nvals[F] = len(ind_rain)
+        fileindex[F] = F
 
-        #Calculate the vertical gradient of velocity and RhoHV, to use an indications for the base of the melting layer.
-       	grad_v = np.gradient(v_prof)
-       	grad_rhv = np.gradient(rhv_prof)
+        #If profile data is extracted create output directory for this date
+        if not os.path.exists(os.path.join(outdir,date)):
+            os.makedirs(os.path.join(outdir,date))
 
-        #Finds the maximum gradient of velocity within the region extracted
-       	max_grad_v_ind = np.where(grad_v==np.max(grad_v[ind3:ind3+17]))[0][0]
-       	max_grad_v = grad_v[max_grad_v_ind]
-       	#print 'max grad_v = ', max_grad_v, ' at height of ', rg[max_grad_v_ind]
-    
-        #Finds the maximum gradient of RhoHV within the region extracted
-       	min_grad_rhv_ind = np.where(grad_rhv==np.min(grad_rhv[ind3:ind3+17]))[0][0]
-       	min_grad_rhv = grad_rhv[min_grad_rhv_ind]
-    	#print 'max_grad_rhv = ', max_grad_rhv, 'at height of ', rg[max_grad_rhv_ind]
-	
-        #Looks to see if the gradients are large enough, either in velocity alone or a combination of velocity and RhoHV 
-        #These values were chosen after analysing a number of cases.
-       	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
-            np.logical_and(max_grad_v_ind > ind3, max_grad_v >0.25)):
+        MLB[F] = rg[MLB_ind]
+        #Save ZDR values 
+        med_zdr[F] = np.median(zdru_prof[ind_rain])
+        mean_zdr[F] = np.mean(zdru_prof[ind_rain])
+        std_zdr[F] = np.std(zdru_prof[ind_rain]) 
 
-            #If profile data is extracted create output directory for this date
-            if not os.path.exists(os.path.join(outdir,date)):
-                os.makedirs(os.path.join(outdir,date))
+        #Make plot if user has requested them
+        if plot==1:
+            fig = plt.figure(figsize=(10,7))    
+            ax1 = fig.add_subplot(141)
+            ax1.plot(rhv_prof,rg,'k',linewidth=2)
+            ax1.plot(rhv_prof[ind1],rg[ind1],'kx',markersize=8,linewidth=2,label='matches criteria')
+            ax1.set_ylim([0, 4])
+            ax1.set_xlim(0.8,1)
+            ax1.set_xlabel('RhoHV')
+            ax1.grid(axis='y')
+            ax1b=ax1.twiny()
+            ax1b.plot(uzh_prof,rg,'b-',linewidth=2)
+            ax1b.plot(uzh_prof[ind1],rg[ind1],'bx',markersize=8,linewidth=2,label='matches criteria')
+            ax1b.set_ylim([0, 4])
+            ax1b.set_xlabel('dBZ',color='blue')
+            ax1b.set_xlim([-10, 40])
+            ax1b.tick_params(axis='x', colors='blue')
+            ax1b.legend(loc=1,fontsize=12) 
 
-            #Define Melting Level height as the height at the top of the valid data i.e. first rain point 
-            #Need to add on radar height to get height above sea level
-            fileindex[F] = F
-            ML[F] = rg[ind3] + (radh /1000)
-            med_zdr[F] = np.median(zdru_prof[ind2:ind3])
-            std_zdr[F] = np.std(zdru_prof[ind2:ind3])
-
-            #Make plot if user has requested them
-            if plot==1:
-               	fig = plt.figure(figsize=(10,7))    
-                ax1 = fig.add_subplot(141)
-                ax1.plot(rhv_prof,rg,'kx-')
-                ax1.plot(rhv_prof[ind2:ind3],rg[ind2:ind3],'bx')
-                ax1.set_ylim([0, 6])
-                ax1.set_xlim(0.9,1)
-                ax1.set_xlabel('RhoHV')
-                ax2 = fig.add_subplot(142)
-                ax2.plot(uzh_prof,rg,'kx-')
-                ax2.plot(uzh_prof[ind2:ind3],rg[ind2:ind3],'bx')
-                ax2.set_ylim([0, 6])
-                ax2.set_xlabel('dBuZ')
-                ax3 = fig.add_subplot(143)
-                ax3.plot(v_prof,rg,'kx-')
-                ax3.plot(v_prof[ind2:ind3],rg[ind2:ind3],'bx')
-                ax3.set_ylim([0, 6])
-                ax3.set_xlabel('V')
-                ax4 = fig.add_subplot(144)
-                ax4.plot(zdru_prof,rg,'kx-')
-                ax4.plot(zdru_prof[ind2:ind3],rg[ind2:ind3],'bx')
-                ax4.set_ylim([0, 6])
-                ax4.set_xlabel('ZDRu')
-                #if mm<10:
-                #   timestr = str(int(hh)) + '0' + str(int(mm))
-                #    fig.suptitle(timestr)
-                #else:
-                #   timestr = str(int(hh)) + str(int(mm))
-                #    fig.suptitle(timestr)
-           
-                #plt.tight_layout()
-                #file_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
-                #print file_name
-                #file_path = os.path.join(outdir,date,file_name)
+            ax2 = fig.add_subplot(142)
+            ax2.plot(rv_prof,rg,'k-',linewidth=2)
+            ax2.set_ylim([0, 4])
+            ax2.set_xlabel('V')
+            ax2.grid(axis='y')
+            ax2b=ax2.twiny()
+            ax2b.plot(zdru_prof,rg,'b-',linewidth=2)
+            ax2b.plot(zdru_prof[ind1],rg[ind1],'bx',markersize=8,linewidth=2,label='matches criteria')
+            ax2b.plot(zdru_prof[ind_rain],rg[ind_rain],'gx',markersize=8,linewidth=2,label='final data')
+            ax2b.set_xlim([-1, 1])
+            ax2b.set_xlabel('ZDR',color='blue')
+            ax2b.tick_params(axis='x', colors='blue')
+            ax2b.plot(zdru_prof[MLB_ind],rg[MLB_ind],'ro',markersize=8,linewidth=2,label='MLB')       
+            ax2b.legend(loc=1,fontsize=12)
+       
+            ax3 = fig.add_subplot(143)
+            ax3.plot(Znorm,rg,'k-',linewidth=2,label='Znorm')
+            ax3.plot(1-Rnorm,rg,'b-',linewidth=2,label='1-Rnorm')
+            ax3.plot(gradRV_norm,rg,'g-',linewidth=2,label='gradRVnorm')
+            ax3.grid(axis='y')
+            ax3.set_ylim([0,4])
+            ax3.title.set_text(daystr + timestr)
+            ax3.legend(loc=1,fontsize=12)  
                 
+            ax4 = fig.add_subplot(144)
+            ax4.plot(P26,rg,'k-',linewidth=2,label='P26')
+            ax4.plot(P26d,rg,'b-',linewidth=2,label='P26d\'')
+            ax4.plot(-1*P26dd,rg,'g-',linewidth=2,label='-P26d\'\'')
+            ax4.plot(P26_E,rg,'r-',linewidth=2,label='P26_E')
+            ax4.grid(axis='y')
+            ax4.set_ylim([0,4])
+            ax4.set_xlim([-0.1, np.nanmax(P26_E)])
+            ax4.set_xlabel('P26')
+            ax4.plot(P26_E[peak_ind],rg[peak_ind],'rs',markersize=8,linewidth=2,label='Peak')    
+            ax4.plot(P26_E[MLB_ind],rg[MLB_ind],'ro',markersize=8,linewidth=2,label='MLB')
+            ax4.legend(loc=1,fontsize=12)
+        
+            #Plot and save figure 
+            plt.savefig(img_name,dpi=150)
+            print('graph plotted')
+            plt.close()
+            plt.clf()
 
-                #Plot and save figure 
-                plt.savefig(img_name,dpi=150)
-                print('graph plotted')
-                plt.close()
-                plt.clf()
-
-    	    #Combine the profile variables to output to text file
-            data_array = np.stack([zdru_prof, rhv_prof, uzh_prof, v_prof],axis=1)
-            np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
-            print('data file saved')
+        #Combine the profile variables to output to text file
+        data_array = np.stack([zdru_prof, rhv_prof, uzh_prof, rv_prof],axis=1)
+        np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
+        print('data file saved')
 
        	del rad
-       	del zdru, rhohv, uzh, v 
+       	del zdru, rhohv, uzh, rv 
        	gc.collect()
 
     #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
-    if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
+    if np.isfinite(MLB).any() or np.isfinite(med_zdr).any():
         print("valid values")
         if not os.path.exists(os.path.join(outdir,date)):
             os.makedirs(os.path.join(outdir,date))
 
-        #T2 = timestamp for file
-        T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
-        output = pd.DataFrame({'ZDR' : med_zdr, 'ML' : ML}, index=T2)
+        output = pd.DataFrame({'ZDR' : med_zdr, 'MLB' : MLB}, index=T2)
         output.to_csv(file)
         return True
 
@@ -224,6 +341,216 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
        	return False
 #        output = pd.DataFrame()
 #        output.to_csv(file)
+
+
+
+#---------------------------------------------------------------------------------------
+#New function inserted into file above on 16/10/23
+##Extract Melting Layer and mean ZDR values from vertical scans and save to csv file'
+#
+#def process_zdr_scans(outdir,raddir,date,file,plot):
+# 
+#    filelist = glob.glob(raddir+date+'/*.nc')
+#    filelist.sort()    
+#    ML=np.zeros(300)*np.nan;
+#    nvals=np.zeros(300)*np.nan;
+#    mean_zdr=np.zeros(300)*np.nan;
+#    med_zdr=np.zeros(300)*np.nan;
+#    std_zdr=np.zeros(300)*np.nan;
+#    std_err=np.zeros(300)*np.nan;
+#    T=np.zeros(300)*np.nan;
+#    fileindex=np.zeros(300)*np.nan;
+#
+#    #Loop through files for a given day
+#    for F in range (0,len(filelist)):
+#        print(F)
+#        #Read file
+#        rad=pyart.io.read(filelist[F])
+#
+#        el = copy.deepcopy(rad.elevation['data'])
+#        el = el[::360]
+#        radh = copy.deepcopy(rad.altitude['data'])
+#        az = copy.deepcopy(rad.azimuth['data'])
+#        rg = copy.deepcopy(rad.range['data']/1000)
+#        rg_sp = rg[1]-rg[0]
+#        max_gate = rg.size
+#        #print(max_gate) 
+#       	try:
+#            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
+#            uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
+#            zdru = copy.deepcopy(rad.fields['ZDRu']['data'])
+#            v = copy.deepcopy(rad.fields['Vu']['data'])
+#            v2 = copy.deepcopy(rad.fields['Vu']['data'])
+#
+#       	except:
+#            print("Couldn't load all variables")    
+#            continue
+#
+#        #Create time array
+#        time = rad.metadata['start_datetime']
+#        hh = float(time[11:13])
+#        mm = float(time[14:16])
+#        ss = float(time[17:19])
+#        T[F] = hh + mm/60.0 + ss/3600.0
+#        daystr = time[0:4]+time[5:7]+time[8:10]
+#       
+#        #Create string for timestamp 
+#        if hh<10:
+#            if mm<10:
+#                timestr = '0' + str(int(hh)) + '0' + str(int(mm))
+#            else:
+#                timestr = '0' + str(int(hh)) + str(int(mm))
+#        elif mm<10:
+#            timestr = str(int(hh)) + '0' + str(int(mm))
+#        else:
+#            timestr = str(int(hh)) + str(int(mm))
+#
+#        #Create image filename 
+#        img_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
+#        if os.path.exists(img_name):
+#            print('File already processed, image created')
+#            continue
+#
+#        #Simple unfolding method for velocity profile - this was set for RAINE when the nyquist was -8. 
+#       	ind = v>6.0
+#        v2[ind] = -7.9725 - (7.9725-v[ind])
+#
+#        #Calculate mean values of all azimuths for each range step 
+#        rhv_prof = np.nanmean(rhohv,axis=0)
+#        uzh_prof = np.nanmean(uzh,axis=0)
+#        v_prof = np.nanmean(v2,axis=0)
+#        zdru_prof = np.nanmean(zdru,axis=0)
+#
+#        #Threshold the data to select regions of rain
+#        ind = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  v_prof <- 2))
+#
+#        #Check if any of the data fit the criteria
+#        #If no, skip to next iteration of the loop i.e. next file
+#        if np.sum(ind==True)==0:
+#            continue
+#
+#        #Find index of good data
+#        i = np.where(ind==True)
+#        
+#        #Find starting point, lowest rain gate
+#        ind2 = i[0][0]
+#        if rg[ind2]>1.0:
+#            print('lowest point is above 1km')
+#            continue       
+# 
+#        #Find bottom of the melting layer, i.e. top of the rain by finding gaps in the good data
+#        #First check if there are any gaps
+#	#Find data gaps greater than 8 points. If size==0 then there arent any gaps, so use the top point of the selected data
+#        if np.where(np.diff(i[0])>8)[0].size == 0:
+#            ind3=i[0][-1]            
+#        else:
+#            ind3 = i[0][np.where(np.diff(i[0])>8)[0][0]]+1                        
+#        
+#        #If the section of data is less than 0.48km (16*0.03) then skip to next volume
+#        if ind3-ind2<16:
+#            continue
+#
+#        #Count the number of data points
+#        nvals[F] = ind3-ind2+1
+#
+#        #Calculate the vertical gradient of velocity and RhoHV, to use an indications for the base of the melting layer.
+#       	grad_v = np.gradient(v_prof)
+#       	grad_rhv = np.gradient(rhv_prof)
+#
+#        #Finds the maximum gradient of velocity within the region extracted
+#       	max_grad_v_ind = np.where(grad_v==np.max(grad_v[ind3:ind3+17]))[0][0]
+#       	max_grad_v = grad_v[max_grad_v_ind]
+#       	#print 'max grad_v = ', max_grad_v, ' at height of ', rg[max_grad_v_ind]
+#    
+#        #Finds the maximum gradient of RhoHV within the region extracted
+#       	min_grad_rhv_ind = np.where(grad_rhv==np.min(grad_rhv[ind3:ind3+17]))[0][0]
+#       	min_grad_rhv = grad_rhv[min_grad_rhv_ind]
+#    	#print 'max_grad_rhv = ', max_grad_rhv, 'at height of ', rg[max_grad_rhv_ind]
+#	
+#        #Looks to see if the gradients are large enough, either in velocity alone or a combination of velocity and RhoHV 
+#        #These values were chosen after analysing a number of cases.
+#       	if np.logical_or(np.logical_and(np.logical_and(max_grad_v_ind > ind3, 0.15 <= max_grad_v < 0.25), min_grad_rhv <-0.015),\
+#            np.logical_and(max_grad_v_ind > ind3, max_grad_v >0.25)):
+#
+#            #If profile data is extracted create output directory for this date
+#            if not os.path.exists(os.path.join(outdir,date)):
+#                os.makedirs(os.path.join(outdir,date))
+#
+#            #Define Melting Level height as the height at the top of the valid data i.e. first rain point 
+#            #Need to add on radar height to get height above sea level
+#            fileindex[F] = F
+#            ML[F] = rg[ind3] + (radh /1000)
+#            med_zdr[F] = np.median(zdru_prof[ind2:ind3])
+#            std_zdr[F] = np.std(zdru_prof[ind2:ind3])
+#
+#            #Make plot if user has requested them
+#            if plot==1:
+#               	fig = plt.figure(figsize=(10,7))    
+#                ax1 = fig.add_subplot(141)
+#                ax1.plot(rhv_prof,rg,'kx-')
+#                ax1.plot(rhv_prof[ind2:ind3],rg[ind2:ind3],'bx')
+#                ax1.set_ylim([0, 6])
+#                ax1.set_xlim(0.9,1)
+#                ax1.set_xlabel('RhoHV')
+#                ax2 = fig.add_subplot(142)
+#                ax2.plot(uzh_prof,rg,'kx-')
+#                ax2.plot(uzh_prof[ind2:ind3],rg[ind2:ind3],'bx')
+#                ax2.set_ylim([0, 6])
+#                ax2.set_xlabel('dBuZ')
+#                ax3 = fig.add_subplot(143)
+#                ax3.plot(v_prof,rg,'kx-')
+#                ax3.plot(v_prof[ind2:ind3],rg[ind2:ind3],'bx')
+#                ax3.set_ylim([0, 6])
+#                ax3.set_xlabel('V')
+#                ax4 = fig.add_subplot(144)
+#                ax4.plot(zdru_prof,rg,'kx-')
+#                ax4.plot(zdru_prof[ind2:ind3],rg[ind2:ind3],'bx')
+#                ax4.set_ylim([0, 6])
+#                ax4.set_xlabel('ZDRu')
+#                #if mm<10:
+#                #   timestr = str(int(hh)) + '0' + str(int(mm))
+#                #    fig.suptitle(timestr)
+#                #else:
+#                #   timestr = str(int(hh)) + str(int(mm))
+#                #    fig.suptitle(timestr)
+#           
+#                #plt.tight_layout()
+#                #file_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
+#                #print file_name
+#                #file_path = os.path.join(outdir,date,file_name)
+#                
+#
+#                #Plot and save figure 
+#                plt.savefig(img_name,dpi=150)
+#                print('graph plotted')
+#                plt.close()
+#                plt.clf()
+#
+#    	    #Combine the profile variables to output to text file
+#            data_array = np.stack([zdru_prof, rhv_prof, uzh_prof, v_prof],axis=1)
+#            np.savetxt(os.path.join(outdir, date, 'vert_profs_' + daystr + '_' + timestr + '.txt'), data_array, delimiter=',')
+#            print('data file saved')
+#
+#       	del rad
+#       	del zdru, rhohv, uzh, v 
+#       	gc.collect()
+#
+#    #If a melting layer and/or a value of ZDR offset for the profile can be determined then save the data to file
+#    if np.isfinite(ML).any() or np.isfinite(med_zdr).any():
+#        print("valid values")
+#        if not os.path.exists(os.path.join(outdir,date)):
+#            os.makedirs(os.path.join(outdir,date))
+#
+#        #T2 = timestamp for file
+#        T2 = pd.to_datetime(date) + pd.to_timedelta(T, unit='h')
+#        output = pd.DataFrame({'ZDR' : med_zdr, 'ML' : ML}, index=T2)
+#        output.to_csv(file)
+#        return True
+#
+#    else:
+#       	return False
+##        output = pd.DataFrame()
+##        output.to_csv(file)
 
 #---------------------------------------------------------------------------------------------
 #Calculate hourly median values of melting layer heights to use for Z calibration
@@ -246,17 +573,20 @@ def calc_hourly_ML(outdir,date):
     
         for hh in range(0,24):
             beg=time(hh,0,0)
+            print(beg)
             if hh==23:
                 end=time(23,59,0)            
+                print(end)
             else:
                 end=time(hh+1,0,0)
-    
+                print(end)
             #Find values of melting layer and median ZDR between each hourly period
-            ml_zdr=data[['ML','ZDR']].between_time(beg,end,include_end=False)
+            #ml_zdr=data[['MLB','ZDR']].between_time(beg,end,include_end=False)
+            ml_zdr=data[['MLB','ZDR']].between_time(beg,end,inclusive='left')
         
             #If there are less than 3 (out of 9) valid values, set all to NaN and continue
             #Else calculate median value of melting layer height and ZDR
-            if ml_zdr['ML'].count()<3:
+            if ml_zdr['MLB'].count()<3:
                 hourly_ml[hh]=float('nan')
                 hourly_zdr[hh]=float('nan')
                 continue
@@ -270,14 +600,14 @@ def calc_hourly_ML(outdir,date):
         
                 ml_zdr[ind==True]=np.nan
       
-                hourly_ml[hh]=ml_zdr['ML'].median()
+                hourly_ml[hh]=ml_zdr['MLB'].median()
                 hourly_zdr[hh]=ml_zdr['ZDR'].median()
            
         if np.isfinite(hourly_ml).any():      
         
             #Construct time array for hourly medians i.e. 00:30, 01:30
             hourly_T = pd.to_datetime(date) + pd.timedelta_range('00:30:00','23:30:00',freq='1H')
-            hourly_ml_zdr = pd.DataFrame({'H_ML' : hourly_ml, 'H_ZDR' : hourly_zdr}, index=hourly_T)
+            hourly_ml_zdr = pd.DataFrame({'H_MLB' : hourly_ml, 'H_ZDR' : hourly_zdr}, index=hourly_T)
         
             hourly_ml_zdr = hourly_ml_zdr.dropna()
             hourly_ml_zdr.to_csv(file2)

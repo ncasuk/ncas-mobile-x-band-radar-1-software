@@ -23,7 +23,8 @@ def arg_parse_all():
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
                         help=f'Make plots of the profiles if p is set to 1',metavar='')
-    
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
+
     return parser.parse_args()
 
 def loop_over_days(args):
@@ -42,6 +43,7 @@ def loop_over_days(args):
     start_date = args.start_date[0]
     end_date = args.end_date[0]
     plot = args.make_plots[0]
+    table = args.table_name[0]
 
     start_date_dt = dp.parse(start_date) 
     end_date_dt = dp.parse(end_date) 
@@ -64,9 +66,10 @@ def loop_over_days(args):
             print(day)
     
             # command to submit to lotus
-            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} --account=short4hr -t {SETTINGS.WALLCLOCK} -o " \
+            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.MAX_RUNTIME} -o " \
                              f"{SETTINGS.LOTUS_DIR}{today}/{day}.out -e {SETTINGS.LOTUS_DIR}{today}/{day}.err "\
-                             f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_vert_scans_day.py -d {day} -p {plot}\""
+                             f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_vert_scans_day.py\
+                             -d {day} -p {plot} -n {table}\""
     
             subprocess.call(sbatch_command, shell=True)
     
