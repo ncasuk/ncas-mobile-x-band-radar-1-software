@@ -62,7 +62,7 @@ def loop_over_days(args):
             print(day)
     
             # command to submit to lotus
-            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.WALLCLOCK} -o " \
+            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.MAX_RUNTIME} -o " \
                              f"{SETTINGS.LOTUS_DIR}{today}/{day}_hzdr.out -e {SETTINGS.LOTUS_DIR}{today}/{day}_hzdr.err "\
                              f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_horz_zdr_day.py -d {day}\""
     

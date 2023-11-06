@@ -257,6 +257,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         std_zdr[F] = np.std(zdru_prof[ind_rain]) 
 
         #Make plot if user has requested them
+        #This is a plot for every time step
         if plot==1:
             fig = plt.figure(figsize=(10,7))    
             ax1 = fig.add_subplot(141)
@@ -626,24 +627,26 @@ def extract_ml_zdr(time, ml_zdr):
     ft=ft.tz_convert(None)
 
 #Index of nearest values to ft
-    indf = ml_zdr.index.get_loc(ft, method='nearest')
+#    indf = ml_zdr.index.get_loc(ft, method='nearest')
+    indf = ml_zdr.index.get_indexer([ft], method='nearest')
+    indf = indf[0]
     #print ft, ml_zdr.index[indf] 
 #If radar file time is earlier than first index of ml_zdr, set ml and zdr to first value in file
     if ft >= ml_zdr.index[-1]:
 
-        mlh=ml_zdr['H_ML'][-1]
+        mlh=ml_zdr['H_MLB'][-1]
         zdr_bias=ml_zdr['H_ZDR'][-1]
 
 #If radar file time is later than last index of ml_zdr, set ml and zdr to last value in file
     elif ft <= ml_zdr.index[0]:
 
-        mlh=ml_zdr['H_ML'][0]
+        mlh=ml_zdr['H_MLB'][0]
         zdr_bias=ml_zdr['H_ZDR'][0]
 
 #If radar file time equals an index of ml_zdr, set ml and zdr to those values.
     elif ft == ml_zdr.index[indf]:
 
-        mlh=ml_zdr['H_ML'][indf]
+        mlh=ml_zdr['H_MLB'][indf]
         zdr_bias=ml_zdr['H_ZDR'][indf]
    
 #Else find time indices either side of file time and linearly interpolate between them               
@@ -663,7 +666,7 @@ def extract_ml_zdr(time, ml_zdr):
         t4 = float(t2) / float(t3)
 
         #Melting layer height interpolated linearly between hourly values
-        mlh = ml_zdr['H_ML'][st] + (ml_zdr['H_ML'][fn] - ml_zdr['H_ML'][st]) * t4
+        mlh = ml_zdr['H_MLB'][st] + (ml_zdr['H_MLB'][fn] - ml_zdr['H_MLB'][st]) * t4
 
         #ZDR interpolated linearly between hourly values
         zdr_bias = ml_zdr['H_ZDR'][st] + (ml_zdr['H_ZDR'][fn] - ml_zdr['H_ZDR'][st]) * t4

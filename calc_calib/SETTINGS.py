@@ -50,4 +50,4 @@ PHI_DIR = Z_CALIB_DIR+'phi_files/'
 # tuples.The first tuple of each pair is the start and stop elevation 
 # of the segment to exclude. The second tuple contains the start and 
 # stop azimuth of the segment to exclude.
-EXCLUSIONS = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
+EXCLUSIONS = [((0,90.1),(307,321)),((0,90.1),(0,0.51))]
