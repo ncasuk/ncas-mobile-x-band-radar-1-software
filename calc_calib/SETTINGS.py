@@ -41,7 +41,7 @@ ZDR_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_
 
 #Location of output of Z data for calibration
 #Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/'
-Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/'
+Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/cloud_scans/'
 
 #Location of phi files 
 PHI_DIR = Z_CALIB_DIR+'phi_files/'
@@ -50,4 +50,4 @@ PHI_DIR = Z_CALIB_DIR+'phi_files/'
 # tuples.The first tuple of each pair is the start and stop elevation 
 # of the segment to exclude. The second tuple contains the start and 
 # stop azimuth of the segment to exclude.
-EXCLUSIONS = [((0,90.1),(307,321)),((0,90.1),(0,0.51))]
+EXCLUSIONS = [((0,90.1),(307,321))]

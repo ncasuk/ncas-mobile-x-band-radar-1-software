@@ -72,6 +72,7 @@ def plot_zcalib(args):
 
     #Loop through files to find the indices of those between the inputted start and end dates
     for f in range(0,len(filelist1)):
+        print(f)
         match = re.search(r'\d{8}',filelist1[f])
         file=match.group()
         file_dt=dp.parse(file)
@@ -95,7 +96,7 @@ def plot_zcalib(args):
                nrays=a2
 
     #Number of volumes can vary each day    
-    nvols=250
+    nvols=300
     phiest=np.zeros((ndays,nvols,nrays))*np.nan
     phiobs=np.zeros((ndays,nvols,nrays))*np.nan
     good_rays=np.zeros((ndays,nvols))*np.nan
@@ -180,12 +181,12 @@ def plot_zcalib(args):
                       label="Median Bias = %s" % round(median_bias_db,2))
     plt.plot([start_date_dt, end_date_dt],[mean_bias_db,mean_bias_db],'g', 
                       label="Mean Bias = %s" % round(mean_bias_db,2))
-    plt.plot([start_date_dt, end_date_dt],[mean_bias_db+std_db*2,mean_bias_db+std_db*2],'g--',
+    plt.plot([start_date_dt, end_date_dt],[mean_bias_db+std_db,mean_bias_db+std_db],'g--',
                       label="Standard Deviation = %s" % round(std_db,2))
-    plt.plot([start_date_dt, end_date_dt],[mean_bias_db-std_db*2,mean_bias_db-std_db*2],'g--')
+    plt.plot([start_date_dt, end_date_dt],[mean_bias_db-std_db,mean_bias_db-std_db],'g--')
     
-    plt.plot(data.index, median_bias_each_day_db,'rx')
-    
+    plt.plot(data.index, median_bias_each_day_db,'rx')      
+ 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=1))
     plt.gca().xaxis.set_minor_locator(mdates.WeekdayLocator(interval=1))
@@ -201,14 +202,15 @@ def plot_zcalib(args):
    
     #If you want to overlay number of rays for each data point then uncomment these lines.
     #May need some tweaking to get the yaxis scale correct for the data you are plotting. 
-#    ax2=ax1.twinx()
-#    ax2.set_ylim(0,20000)
-#    ax2.plot(data.index, num_rays_day,'bx-')
-#    ax2.set_yticks([5000, 10000])
-#    ax2.set_yticks([1000, 2000, 3000, 4000, 7500],minor=True)
-#    plt.ylabel('Total number of Rays',{'fontsize':18})
-#    plt.yticks(size=18)
-#    plt.xlim(start_date_dt,end_date_dt)
+    ax2=ax1.twinx()
+    ax2.set_ylim(0,10000)
+    ax2.plot(data.index, num_rays_day,'bx-')
+    print(num_rays_day)
+    ax2.set_yticks([5000, 10000])
+    ax2.set_yticks([1000, 2000, 3000, 4000, 7500],minor=True)
+    plt.ylabel('Total number of Rays',{'fontsize':18})
+    plt.yticks(size=18)
+    plt.xlim(start_date_dt,end_date_dt)
 
     #Save the plot
     imgname = f'{img_dir}/Z_calibration_{start_date}_{end_date}.png'

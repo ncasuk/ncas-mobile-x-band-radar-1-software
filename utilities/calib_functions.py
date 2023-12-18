@@ -703,7 +703,8 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
     ray_el = np.zeros((nfiles,ss))*np.nan
 
 
-    for file in range(nfiles):
+
+    for file in range(0,nfiles,2):
     #for file in (181,):
         print(file)
 
@@ -803,7 +804,9 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
 
     	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
         #chilbolton
-       	exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+       	#exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+        #lyneham
+       	exclusions = [((0,90.1),(307,321))]
         exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
                                   rad.elevation['data']<ele[1],
                                   rad.azimuth['data']>=azi[0],
@@ -939,10 +942,42 @@ def calibrate_day_norm(raddir, outdir, day, ml_zdr):
         return False
 
 #--------------------------------------------------------------------------------------------------------------------------
+def identify_first_phase_ray(data, mask, starting_gate, window_size, filter_size, end_gate_limit, missing_points=0):
+    valid_data = np.where(np.logical_or(mask,
+                                        ~np.isfinite(data)),
+                          np.zeros(data.shape),
+                          np.ones(data.shape))
+    if valid_data[starting_gate:end_gate_limit].sum() < window_size-missing_points:
+        return np.nan, np.nan
+
+    j = starting_gate
+    start_not_found = True
+    while start_not_found:
+        if j == data.shape[0]:
+            return np.nan, np.nan
+
+        if valid_data[j]:
+            valid_sum = valid_data[j:window_size+j].sum()
+            #print(valid_sum)
+            if valid_sum >= (window_size-missing_points):
+                phase = np.nanmedian(data[j:j+filter_size])
+                return phase, j
+            elif j > end_gate_limit:
+                return np.nan, np.nan
+            else:
+                j += 1
+        elif j > end_gate_limit:
+            return np.nan, np.nan
+
+        else:
+            j += 1
+
+
+#--------------------------------------------------------------------------------------------------------------------------
 def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
     ZDRmax = 2.0
-    min_path = 15
+    min_path = 10
     filelist = glob.glob(os.path.join(raddir,'*.nc'))
     filelist.sort()
     nfiles=len(filelist)
@@ -968,9 +1003,12 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
     ray_el = np.zeros((nfiles,ss))*np.nan
 
 
-    for file in range(nfiles):
-    #for file in (30,):
-        #print(file)
+#cloud scans are files 0,2,4,6 etc
+#boundary layer scans are 1,3,5,7 etc
+
+   # for file in range(nfiles):
+    for file in range(0,nfiles,2):
+        print(file)
 
         #Read file
         rad=pyart.io.read(filelist[file])
@@ -983,16 +1021,26 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
         T[file] = hh + mm/60.0 + ss/3600.0
 
         #Extract dimensions
+        ind = rad.rays_per_sweep['data'] !=360
+        if np.sum(ind)>0:
+            print('At least one sweep does not have 360 rays')
+            continue        
+
         Rdim = rad.ngates
         Edim = rad.nsweeps
         Tdim = rad.nrays
         Adim = int(Tdim/Edim)
+        if Adim!=360:
+            print('azimuths not equal to 360')
+            print(Adim)
+            continue
         #Extract data
         try:
             rg = copy.deepcopy(rad.range['data']/1000)
             rg_sp = rg[1]-rg[0]
             max_gate = rg.size
             el = copy.deepcopy(rad.elevation['data'])
+            el2 = copy.deepcopy(rad.elevation['data'])
             el = el[::360]
             radh = copy.deepcopy(rad.altitude['data'])
             az = copy.deepcopy(rad.azimuth['data'])
@@ -1026,7 +1074,6 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
         zind = beam_height > mlh   
         uzh[zind==True] = np.nan
-
         zdr[zind==True] = np.nan
         phidp[zind==True] = np.nan
         uphidp[zind==True] = np.nan
@@ -1034,14 +1081,15 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
         rhohv[zind==True] = np.nan
 
         #Get rid of first 2km
-        n=13
-        uzh = uzh[:,n:]
-        zdr = zdr[:,n:]
-        phidp = phidp[:,n:]
-        uphidp = uphidp[:,n:]
-        kdp = kdp[:,n:] 
-        rhohv = rhohv[:,n:]
-        rg = rg[n:] - rg[n]
+        #n=13 for 1us pulse
+#        n=26 #for 0.5us pulse
+#        uzh = uzh[:,n:]
+#        zdr = zdr[:,n:]
+#        phidp = phidp[:,n:]
+#        uphidp = uphidp[:,n:]
+#        kdp = kdp[:,n:] 
+#        rhohv = rhohv[:,n:]
+#        rg = rg[n:] - rg[n]
 
         #Create empty arrays for observed and calculated PhiDP
         phiobs = np.zeros([Tdim])*np.nan
@@ -1069,14 +1117,22 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
         for i in az_index:
         #for i in (778,):
+            print('1. az_index = ', i, 'azimuth = ', az[i], 'El = ', el2[i])
+
+#This function uses a moving window to find the first 10 valid values of phidp and uses this as the starting point of the ray.
+            data=phidp[i,:]
+            [phase1,r1] = identify_first_phase_ray(data, data.mask, 0, 10, 5, len(data), missing_points=0)
+            if np.isnan(r1):
+                print('insufficient phidp')
+                continue
 
             #Extract ray
-            phidp_f = phidp[i,:]
-            uphidp_f = uphidp[i,:]
-            #uphidp_sm_f = uphidp_sm[i,:]
-            uzh_f = uzh[i,:]
-            zdr_f = zdr[i,:] - zdr_bias
-            rhohv_f = rhohv[i,:]
+            phidp_f = phidp[i,r1:]
+            uphidp_f = uphidp[i,r1:]
+            uzh_f = uzh[i,r1:]
+            zdr_f = zdr[i,r1:] - zdr_bias
+            rhohv_f = rhohv[i,r1:]
+            rg_f = rg[r1:]
 
             #attenuation correction
             #phidp_att = copy.deepcopy(phidp_f)
@@ -1087,15 +1143,16 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
             zdr_att = zdr_f + 0.04*PA
 
             #Check for all-nan array, go to next iteration of loop if so
-            if np.sum(np.isfinite(phidp_att)==True)==0:
-                continue
+            #if np.sum(np.isfinite(phidp_att)==True)==0:
+            #    continue
 
             #Find minimum value of PhiDP
-            phi1_valid = np.where(np.isfinite(phidp_att))[0]
-            if phi1_valid.size != 0:
-                phi1 = phi1_valid[0]
-            else:
-                continue
+            #phi1_valid = np.where(np.isfinite(phidp_att))[0]
+            #if phi1_valid.size != 0:
+             #   phi1 = phi1_valid[0]
+            #else:
+            #    continue
+            phi1=0
 #            #Find indices where PhiDP is between 4 and 6 degs    
             ind = np.where(np.logical_and(phidp_att > 4, phidp_att < 6))[0]
 
@@ -1103,47 +1160,40 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
             if ind.size != 0:
                 #Find the index of the maximum value of PhiDP between 4 and 6
                 ib = np.where(phidp_att==max(phidp_att[ind]))[0][0]
-                #print '1. index and value of maximum phidp_f between 4&6=', ib, phidp_f[ib]
 
                 pdpmax = phidp_att[ib]
-#                path_len = (np.sum(np.isfinite(uzh_f[0:ib+1])==True))*rg_sp
-                #path_len = (np.sum(np.isfinite(uzh_f[phi1:ib+1])==True))*rg_sp
-                path_len = rg[ib]
-                #print '2. maxmimum phidp=', pdpmax, 'Path length=', path_len
+                print('2. maxmimum phidp=', pdpmax)
+                path_len = rg_f[ib]-rg[r1]
+
+                if path_len < min_path:
+                    print('3. path too short')                
 
                 #if path of significant returns exceeds min_path
-                #if np.logical_and(path_len > min_path, pdpmax > 4):
                 if path_len > min_path:
-                    #print '3.', con1
-                    #print "step1"
-                    #plt.plot(zdr_f[0:ib+1])
+                    print('3.',  'Path length = ', path_len)                    
 
-                    #exclude rays with any bad pixels (heavy rain (mie-scattering))
-#                    ind = zdr_f[0:ib+1] > ZDRmax
+                    #exclude rays with large ZDR (heavy rain (mie-scattering))
                     ind = zdr_att[phi1:ib+1] > ZDRmax
-                    #print '4.', np.sum(ind) < 1
+
+                    if np.sum(ind) > 1:                    
+                        print('4. Number of large ZDR = ', np.sum(ind)) 
 
                     if np.sum(ind) < 1:
-                        #plt.plot(rhohv_f[0:ib+1])
-                        #print "step2"
 
                         #exclude rays where 3 or more values of RhoHV are less than 0.98, i.e. not rain
-                        #ind = rhohv_f[0:ib+1] < 0.98
                         ind = np.logical_and(rhohv_f > 0.0, rhohv_f < 0.98)
-                        #print '5.', np.sum(ind) < 3
-                        #print uzh_f[0:10]
-                        #print uzh_f_all[0,0:10]
-                        #if np.sum(ind) < 3:   
 
-#                        if np.sum(ind[0:ib+1]) < 3:   
+                        if np.sum(ind[phi1:ib+1]) > 2:   
+                            print('5. number of rhohv<0.98 = ', np.sum(ind[phi1:ib+1]))
+
                         if np.sum(ind[phi1:ib+1]) < 3:   
-                            #print i
+                            print('6. all conditions met for az_index = ',i,', azimuth = ',az[i], ', elevation = ', el2[i])
+
                             #index of good rays (value from 0 to 4320)
                             ray_index[file,i] = i
                             ray_az[file,i] = rad.azimuth['data'][i]
                             ray_el[file,i] = rad.elevation['data'][i]
 
-                            #print i
                             uzh_att[ind] = np.nan
                             zdr_att[ind] = np.nan
                             #phidp_f[ind] = np.nan
@@ -1164,6 +1214,8 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
                             phiest[i] = tmpphi[ib]
 #                           print 'phiest = ', phiest[i] 
 
+            else:
+                print('2. No PhiDP between 4-6')
         #phiest is a function of ray, phiest(nrays)
         #phiest_all is a function of volume and ray, phiest_all(nvols,nrays)
         #delta is a function of ray, delta(nrays)
@@ -1301,6 +1353,9 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
         rhohv[:,0:3] = np.nan
 
         ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>15, uzh<=18],axis=0)
+#        ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>18, uzh<=21],axis=0)
+ #       ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>21, uzh<=24],axis=0)
+#
         if ind.sum() >0:
 #           num18[file] = np.sum(ind==True)
 #           stdZDR18[file] = np.nanstd(zdr[ind==True])
