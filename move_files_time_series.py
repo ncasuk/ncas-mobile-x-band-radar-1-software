@@ -1,10 +1,14 @@
-import SETTINGS
+import dateutil.parser as dp
+from datetime import date
 import os
+import re
 import argparse
 import dateutil.parser as dp
 from datetime import date
-import re
 import subprocess
+import sys
+sys.path.insert(1, '/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1/calc_calib/')
+import SETTINGS
 
 def arg_parse_all():
     """
@@ -28,12 +32,12 @@ def arg_parse_all():
 def loop_over_days(args):
  
     """ 
-    Runs calc_horz_zdr_day.py for each day in the given time range
     
     :param args: (namespace) Namespace object built from arguments parsed from command line
     """
 
     today = date.today().strftime("%Y-%m-%d")
+
     #Set up directory for Lotus output files based on today's date
     if not os.path.exists(os.path.join(SETTINGS.LOTUS_DIR,today)):
         os.makedirs(os.path.join(SETTINGS.LOTUS_DIR,today))
@@ -49,10 +53,10 @@ def loop_over_days(args):
  
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
+
+    #list only date directories
+    inputdir = SETTINGS.VOLUME_DIR
  
-    inputdir = SETTINGS.ZDR_CALIB_DIR
-    #if not os.path.exists(inputdir):
-    #    os.makedirs(inputdir)
     pattern = re.compile(r'(\d{8})')
     proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]
     proc_dates.sort()
@@ -64,9 +68,9 @@ def loop_over_days(args):
             print(day)
     
             # command to submit to lotus
-            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.MAX_RUNTIME} -o " \
-                             f"{SETTINGS.LOTUS_DIR}{today}/{day}_hzdr.out -e {SETTINGS.LOTUS_DIR}{today}/{day}_hzdr.err "\
-                             f"--wrap=\"python {SETTINGS.SCRIPT_DIR}/process_horz_zdr_day.py -d {day}\""
+            sbatch_command = f"sbatch -p {SETTINGS.QUEUE} -t {SETTINGS.MAX_RUNTIME} --mem=4000 -o " \
+                             f"{SETTINGS.LOTUS_DIR}{today}/{day}_move_files.out -e {SETTINGS.LOTUS_DIR}{today}/{day}_move_files.err "\
+                             f"--wrap=\"python move_files_day.py -d {day}\""
     
             subprocess.call(sbatch_command, shell=True)
     
@@ -78,6 +82,6 @@ def main():
     args = arg_parse_all()
     loop_over_days(args)
 
-
 if __name__ == '__main__':
     main() 
+ 

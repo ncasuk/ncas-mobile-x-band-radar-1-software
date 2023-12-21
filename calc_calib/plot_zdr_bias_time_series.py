@@ -36,7 +36,7 @@ def arg_parse():
                         type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
-                        help=f'Make plots of the day or time series if p is set to 1 or 2',metavar='')
+                        help=f'Make plots of the day or time series if p is set to 1 or 2, or a plot of every time step if p is 3',metavar='')
     
     return parser.parse_args()
 
@@ -112,7 +112,7 @@ def plot_zdr(args):
 
           
     median_bias=np.nanmedian(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
-    print('Median Bias for whole period = ',median_bias) 
+    print('Median Bias for whole period (from hourly data) = ',median_bias) 
     #(3) Make a plot showing time series of ZDR for chosen period
     
     if plot==2:    
@@ -150,7 +150,40 @@ def plot_zdr(args):
         print('Saving ',img_name)
         plt.savefig(img_name,dpi=150)
         plt.close()
-    
+   
+    #make plot of all ZDR values i.e. every timestep
+    if plot==3:
+
+        all_data_mean=all_data.resample('D').mean()
+        all_data_median=all_data.resample('D').median()
+        all_data_std=all_data.resample('D').std()
+
+        all_data_overall_median=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+        all_data_overall_mean=np.nanmean(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+        all_data_overall_std=np.nanstd(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+
+        fig,ax1=plt.subplots(figsize=(15,8))
+        plt.plot(all_data.index,all_data['ZDR'],'kx')
+        plt.plot(all_data_mean.index,all_data_mean['ZDR'],'ro')
+        plt.plot(all_data_median.index,all_data_median['ZDR'],'go')
+
+        plt.plot([start_date_dt,end_date_dt],[all_data_overall_mean['ZDR'],all_data_overall_mean['ZDR']],'g-')
+
+
+        plt.yticks(size=16)
+        plt.xticks(size=16)
+        plt.grid()
+        plt.ylabel('ZDR Bias (dB)', fontsize=18)
+        plt.xlabel('Date', fontsize=18)
+        plt.xlim([start_date_dt,end_date_dt])
+        monthyearFmt = mdates.DateFormatter('%d-%m-%y')
+        ax1.xaxis.set_major_formatter(monthyearFmt)
+        img_name = f'{outdir}/images/{start_date}_{end_date}_every_zdr.png'
+        print('Saving ',img_name)
+        plt.savefig(img_name,dpi=150)
+        plt.close()
+
+ 
 def main():
     """Runs script if called on command line"""
 

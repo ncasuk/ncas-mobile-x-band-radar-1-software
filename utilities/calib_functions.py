@@ -117,7 +117,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         zdru_prof = np.nanmean(zdru,axis=0)
 
         #Threshold the data to select regions of rain
-        ind1 = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  uzh_prof < 30, rv_prof <- 2))
+        ind1 = np.logical_and(rhv_prof > 0.99, np.logical_and(uzh_prof > 0,  uzh_prof < 30, rv_prof < -2))
         
         #Find data that meets these criteria, which are a good indication of rain. It will also find areas above the melting later, 
         #as snow has similar characteristics
@@ -252,9 +252,9 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
         MLB[F] = rg[MLB_ind]
         #Save ZDR values 
-        med_zdr[F] = np.median(zdru_prof[ind_rain])
-        mean_zdr[F] = np.mean(zdru_prof[ind_rain])
-        std_zdr[F] = np.std(zdru_prof[ind_rain]) 
+        med_zdr[F] = np.nanmedian(zdru_prof[ind_rain])
+        mean_zdr[F] = np.nanmean(zdru_prof[ind_rain])
+        std_zdr[F] = np.nanstd(zdru_prof[ind_rain]) 
 
         #Make plot if user has requested them
         #This is a plot for every time step
@@ -674,273 +674,273 @@ def extract_ml_zdr(time, ml_zdr):
     return mlh, zdr_bias
 
 #--------------------------------------------------------------------------------------------------------------------------
-def calibrate_day_norm(raddir, outdir, day, ml_zdr):
-
-    ZDRmax = 2.0
-    min_path = 15
-    filelist = glob.glob(os.path.join(raddir,'*.nc'))
-    filelist.sort()
-    nfiles=len(filelist)
-    print(nfiles)
-
-    #Extract number of rays 
-    rad=pyart.io.read(filelist[0])
-    ss = rad.nrays
-
-    #create empty array for calibration offsets
-    delta_all=np.zeros((nfiles,ss))*np.nan
-    #create empty array for PhiEst and PhiObs
-    phiest_all=np.zeros((nfiles,ss))*np.nan
-    phiobs_all=np.zeros((nfiles,ss))*np.nan
-    startphi_all=np.zeros((nfiles,ss))*np.nan
-    #create empty array for Time
-    T = np.zeros((nfiles))*np.nan
-    #create empty array for number of good rays in each volume
-    good_rays = np.zeros((nfiles))*np.nan
-    #Create empty array for good ray index
-    ray_index = np.zeros((nfiles,ss))*np.nan
-    ray_az = np.zeros((nfiles,ss))*np.nan
-    ray_el = np.zeros((nfiles,ss))*np.nan
-
-
-
-    for file in range(0,nfiles,2):
-    #for file in (181,):
-        print(file)
-
-        #Read file
-        rad=pyart.io.read(filelist[file])
-
-        #Create time array
-        time = rad.metadata['start_datetime']
-        hh = float(time[11:13])
-        mm = float(time[14:16])
-        ss = float(time[17:19])
-        T[file] = hh + mm/60.0 + ss/3600.0
-
-        #Extract dimensions
-        Rdim = rad.ngates
-        Edim = rad.nsweeps
-        Tdim = rad.nrays
-        Adim = Tdim/Edim
-
-        #Extract data
-        try:
-            rg = copy.deepcopy(rad.range['data']/1000)
-            rg_sp = rg[1]-rg[0]
-            max_gate = rg.size
-            el = copy.deepcopy(rad.elevation['data'])
-            el = el[::360]
-            radh = copy.deepcopy(rad.altitude['data'])
-            az = copy.deepcopy(rad.azimuth['data'])
-            uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
-            zdr = copy.deepcopy(rad.fields['ZDR']['data'])
-            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
-            kdp = copy.deepcopy(rad.fields['KDP']['data'])
-
-            phidp = copy.deepcopy(rad.fields['PhiDP']['data'])
-            ind = phidp > 180
-            phidp[ind] = phidp[ind] - 360
-            ind = phidp < -180
-            phidp[ind] = phidp[ind] + 360
-
-       	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
-            #Set invalid values (-9e33) to nans
-            ind = uphidp.mask==True
-            uphidp[ind]=np.nan
-
-        except:
-            print("Couldn't load all variables")    
-            continue
-
-        #Calculate height of every range gate
-        beam_height = np.empty((Tdim,Rdim))
-        for j in np.arange(0,Edim):
-            for i in np.arange(0,Adim):
-                beam_height[(360*j)+i,:] = radh/1000 + np.sin(np.deg2rad(el[j]))*rg + np.sqrt(rg**2 + (6371*4/3.0)**2) - (6371*4/3.0);
-        #Extract melting layer height and ZDR bias for current file time
-        mlh, zdr_bias = extract_ml_zdr(time, ml_zdr)
-
-        zind = beam_height > mlh   
-        uzh[zind==True] = np.nan
-
-        zdr[zind==True] = np.nan
-        phidp[zind==True] = np.nan
-        uphidp[zind==True] = np.nan
-        kdp[zind==True] = np.nan
-        rhohv[zind==True] = np.nan
-
-        #Remove first 2km of data
-        n=13
-        uzh = uzh[:,n:]
-        zdr = zdr[:,n:]
-        phidp = phidp[:,n:]
-        uphidp = uphidp[:,n:]
-        kdp = kdp[:,n:] 
-        rhohv = rhohv[:,n:]
-        rg = rg[n:] - rg[n]
-
-        #Create empty arrays for observed and calculated PhiDP
-        phiobs = np.zeros([Tdim])*np.nan
-        phiest = np.zeros([Tdim])*np.nan        
-        startphi = np.zeros([Tdim])*np.nan        
-
-#        c=0
-
-# Exclusions is a list of tuples (), where each tuple is a pair of 
-# tuples. 
-# The first tuple of each pair is the start and stop elevation of the 
-# segment to exclude.
-# The second tuple contains the start and stop azimuth of the segment 
-# to exclude.
-# This "one-liner" builds a generator from the list of tuples so each 
-# tuple defines a binary array which is True where the segment occurs 
-# and false elsewhere. 
-# All conditions must be met, so between start and stop in both azimuth 
-# and elevation. 
-# These are then combined to a single array using np.any to create a 
-# single exclude binary array which is True where any of the segments 
-# are found and False in non-excluded places
-
-    	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
-        #chilbolton
-       	#exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
-        #lyneham
-       	exclusions = [((0,90.1),(307,321))]
-        exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
-                                  rad.elevation['data']<ele[1],
-                                  rad.azimuth['data']>=azi[0],
-                                  rad.azimuth['data']<azi[1]],axis=0) for ele, azi in exclusions],axis=0)
-       	az_index = np.where(~exclude_radials)[0]
-
-        for i in az_index:
-
-            #Extract ray
-            phidp_f1 = phidp[i,:]
-            uphidp_f = uphidp[i,:]
-            #uphidp_sm_f = uphidp_sm[i,:]
-            uzh_f = uzh[i,:]
-            zdr_f = zdr[i,:] - zdr_bias
-            rhohv_f = rhohv[i,:]
-
-            phidp_f = phidp_f1 - phidp_f1[0]
-
-            #Check for all-nan array, go to next iteration of loop if so
-            if np.sum(np.isfinite(phidp_f)==True)==0:
-                continue
-            
-            #Find minimum value of PhiDP
-            phi1_valid = (np.nonzero(np.isfinite(phidp_f)))[0]
-            if phi1_valid.size != 0:
-                phi1 = phi1_valid[0]
-            else:
-                continue
-            #Find indices where PhiDP is between 4 and 6 degs    
-            ind = np.where(np.logical_and(phidp_f > 4, phidp_f < 6))[0]
-
-            #If values exist, 
-            if ind.size != 0:
-                #Find the index of the maximum value of PhiDP between 4 and 6
-                ib = np.where(phidp_f==max(phidp_f[ind]))[0][0]
-                #print '1. index and value of maximum phidp_f between 4&6=', ib, phidp_f[ib]
-
-                pdpmax = phidp_f[ib]
-                path_len = rg[ib]
-                #print '2. maxmimum phidp=', pdpmax, 'Path length=', path_len
-
-                #if path of significant returns exceeds min_path
-                #if np.logical_and(path_len > min_path, pdpmax > 4):
-                if path_len > min_path:
-                    #print '3.', con1
-                    #print "step1"
-                    #plt.plot(zdr_f[0:ib+1])
-
-                    #exclude rays with any bad pixels (heavy rain (mie-scattering))
-#                    ind = zdr_f[0:ib+1] > ZDRmax
-                    ind = zdr_f[phi1:ib+1] > ZDRmax
-                    #print '4.', np.sum(ind) < 1
-
-                    if np.sum(ind) < 1:
-                        #plt.plot(rhohv_f[0:ib+1])
-                        #print "step2"
-
-                        #exclude rays where 3 or more values of RhoHV are less than 0.98, i.e. not rain
-                        #ind = rhohv_f[0:ib+1] < 0.98
-                        ind = np.logical_and(rhohv_f > 0.0, rhohv_f < 0.98)
-                        #print '5.', np.sum(ind) < 3
-                        #print uzh_f[0:10]
-                        #print uzh_f_all[0,0:10]
-                        #if np.sum(ind) < 3:   
-
-#                        if np.sum(ind[0:ib+1]) < 3:   
-                        if np.sum(ind[phi1:ib+1]) < 3:   
-                            #print i
-                            #index of good rays (value from 0 to 4320)
-                            ray_index[file,i] = i
-                            ray_az[file,i] = rad.azimuth['data'][i]
-                            ray_el[file,i] = rad.elevation['data'][i]
-
-                            #print i
-                            uzh_f[ind] = np.nan
-                            zdr_f[ind] = np.nan
-                            #phidp_f[ind] = np.nan
-                            #uphidp_sm_f[ind] = np.nan
-			    #uphidp_sm_f.mask[ind] = np.nan
-                            #rhohv_f[ind] = np.nan
-
-                            startphi[i] = np.nanmedian(uphidp_f[phi1:phi1+10])
-
-                            phiobs[i] = pdpmax
-                            #phiobs_all[file,:] = phiobs
-
-                            #kdpest = 1e-05 * (11.74 - 4.020*zdr_f - 0.140*zdr_f**2 + 0.130*zdr_f**3)*10 ** (uzh_f/10)
-                            kdpest = 1e-05 * (11.74 - 4.020*zdr_f[phi1:] - 0.140*zdr_f[phi1:]**2 + 0.130*zdr_f[phi1:]**3)*10 ** (uzh_f[phi1:]/10)
-
-                            tmpphi = np.nancumsum(kdpest)*rg_sp*2
-
-                            phiest[i] = tmpphi[ib]
-                            #phiest[i] = tmpphi[ib-phi1]
-
-        #phiest is a function of ray, phiest(nrays)
-        #phiest_all is a function of volume and ray, phiest_all(nvols,nrays)
-        #delta is a function of ray, delta(nrays)
-        #delta_all is a function of volume and ray, delta_all(nvols,nrays)
-
-       	phiobs_all[file,0:Tdim] = phiobs
-       	phiest_all[file,0:Tdim] = phiest
-       	startphi_all[file,0:Tdim] = startphi
-
-       	good_rays = np.sum(np.isfinite(phiest))
-       	print('file=',file,'rays=',str(good_rays))
-       	del rad
-       	del zdr, rhohv, kdp, phidp, uzh, uphidp
-       	gc.collect()
-                    
-        #print phiobs.shape   
-        #delta = ((phiest-phiobs)/phiobs)*100
-        #print delta.shape
-        #print file
-        #delta_all[file,:] = delta
-        #print 'end'    
-        #filename = outdir + 'file%03.d_phiest_phiobs_delta' %(file)
-        #data_save=np.vstack((phiest,phiobs,delta))
-        #np.save(filename,data_save)          
-
-    #filename = outdir + 'good_rays'     
-    #np.save(filename,good_rays)
-    print("total rays = ", np.sum(np.isfinite(phiest_all.flatten())))
-    if np.sum(np.isfinite(phiest_all.flatten())) !=0:
-        print("phiest and phiobs values exist")
-        phiest_filename = os.path.join(outdir, 'phiest_all_' + day)
-        np.save(phiest_filename,phiest_all)
-        phiobs_filename = os.path.join(outdir, 'phiobs_all_' + day)
-        np.save(phiobs_filename,phiobs_all)
-        startphi_filename = os.path.join(outdir, 'startphi_all_' + day)
-        np.save(startphi_filename,startphi_all)
-        return True
-    else:
-        return False
-
+#def calibrate_day_norm(raddir, outdir, day, ml_zdr):
+#
+#    ZDRmax = 2.0
+#    min_path = 15
+#    filelist = glob.glob(os.path.join(raddir,'*.nc'))
+#    filelist.sort()
+#    nfiles=len(filelist)
+#    print(nfiles)
+#
+#    #Extract number of rays 
+#    rad=pyart.io.read(filelist[0])
+#    ss = rad.nrays
+#
+#    #create empty array for calibration offsets
+#    delta_all=np.zeros((nfiles,ss))*np.nan
+#    #create empty array for PhiEst and PhiObs
+#    phiest_all=np.zeros((nfiles,ss))*np.nan
+#    phiobs_all=np.zeros((nfiles,ss))*np.nan
+#    startphi_all=np.zeros((nfiles,ss))*np.nan
+#    #create empty array for Time
+#    T = np.zeros((nfiles))*np.nan
+#    #create empty array for number of good rays in each volume
+#    good_rays = np.zeros((nfiles))*np.nan
+#    #Create empty array for good ray index
+#    ray_index = np.zeros((nfiles,ss))*np.nan
+#    ray_az = np.zeros((nfiles,ss))*np.nan
+#    ray_el = np.zeros((nfiles,ss))*np.nan
+#
+#
+#
+#    for file in range(1,nfiles,2):
+#    #for file in (181,):
+#        print(file)
+#
+#        #Read file
+#        rad=pyart.io.read(filelist[file])
+#
+#        #Create time array
+#        time = rad.metadata['start_datetime']
+#        hh = float(time[11:13])
+#        mm = float(time[14:16])
+#        ss = float(time[17:19])
+#        T[file] = hh + mm/60.0 + ss/3600.0
+#
+#        #Extract dimensions
+#        Rdim = rad.ngates
+#        Edim = rad.nsweeps
+#        Tdim = rad.nrays
+#        Adim = Tdim/Edim
+#
+#        #Extract data
+#        try:
+#            rg = copy.deepcopy(rad.range['data']/1000)
+#            rg_sp = rg[1]-rg[0]
+#            max_gate = rg.size
+#            el = copy.deepcopy(rad.elevation['data'])
+#            el = el[::360]
+#            radh = copy.deepcopy(rad.altitude['data'])
+#            az = copy.deepcopy(rad.azimuth['data'])
+#            uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
+#            zdr = copy.deepcopy(rad.fields['ZDR']['data'])
+#            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
+#            kdp = copy.deepcopy(rad.fields['KDP']['data'])
+#
+#            phidp = copy.deepcopy(rad.fields['PhiDP']['data'])
+#            ind = phidp > 180
+#            phidp[ind] = phidp[ind] - 360
+#            ind = phidp < -180
+#            phidp[ind] = phidp[ind] + 360
+#
+#       	    uphidp = copy.deepcopy(rad.fields['uPhiDP']['data'])
+#            #Set invalid values (-9e33) to nans
+#            ind = uphidp.mask==True
+#            uphidp[ind]=np.nan
+#
+#        except:
+#            print("Couldn't load all variables")    
+#            continue
+#
+#        #Calculate height of every range gate
+#        beam_height = np.empty((Tdim,Rdim))
+#        for j in np.arange(0,Edim):
+#            for i in np.arange(0,Adim):
+#                beam_height[(360*j)+i,:] = radh/1000 + np.sin(np.deg2rad(el[j]))*rg + np.sqrt(rg**2 + (6371*4/3.0)**2) - (6371*4/3.0);
+#        #Extract melting layer height and ZDR bias for current file time
+#        mlh, zdr_bias = extract_ml_zdr(time, ml_zdr)
+#
+#        zind = beam_height > mlh   
+#        uzh[zind==True] = np.nan
+#
+#        zdr[zind==True] = np.nan
+#        phidp[zind==True] = np.nan
+#        uphidp[zind==True] = np.nan
+#        kdp[zind==True] = np.nan
+#        rhohv[zind==True] = np.nan
+#
+#        #Remove first 2km of data
+#        n=13
+#        uzh = uzh[:,n:]
+#        zdr = zdr[:,n:]
+#        phidp = phidp[:,n:]
+#        uphidp = uphidp[:,n:]
+#        kdp = kdp[:,n:] 
+#        rhohv = rhohv[:,n:]
+#        rg = rg[n:] - rg[n]
+#
+#        #Create empty arrays for observed and calculated PhiDP
+#        phiobs = np.zeros([Tdim])*np.nan
+#        phiest = np.zeros([Tdim])*np.nan        
+#        startphi = np.zeros([Tdim])*np.nan        
+#
+##        c=0
+#
+## Exclusions is a list of tuples (), where each tuple is a pair of 
+## tuples. 
+## The first tuple of each pair is the start and stop elevation of the 
+## segment to exclude.
+## The second tuple contains the start and stop azimuth of the segment 
+## to exclude.
+## This "one-liner" builds a generator from the list of tuples so each 
+## tuple defines a binary array which is True where the segment occurs 
+## and false elsewhere. 
+## All conditions must be met, so between start and stop in both azimuth 
+## and elevation. 
+## These are then combined to a single array using np.any to create a 
+## single exclude binary array which is True where any of the segments 
+## are found and False in non-excluded places
+#
+#    	#raine exclusions = [((0,90.1),(20,160)),((0,90.1),(201,207)),((0,0.51),(185,201.5))]
+#        #chilbolton
+#       	#exclusions = [((0,90.1),(49,90)),((0,90.1),(130,190)),((0,1.01),(0,360))]
+#        #lyneham
+#       	exclusions = [((0,90.1),(307,321))]
+#        exclude_radials = np.any([np.all([rad.elevation['data']>=ele[0],
+#                                  rad.elevation['data']<ele[1],
+#                                  rad.azimuth['data']>=azi[0],
+#                                  rad.azimuth['data']<azi[1]],axis=0) for ele, azi in exclusions],axis=0)
+#       	az_index = np.where(~exclude_radials)[0]
+#
+#        for i in az_index:
+#
+#            #Extract ray
+#            phidp_f1 = phidp[i,:]
+#            uphidp_f = uphidp[i,:]
+#            #uphidp_sm_f = uphidp_sm[i,:]
+#            uzh_f = uzh[i,:]
+#            zdr_f = zdr[i,:] - zdr_bias
+#            rhohv_f = rhohv[i,:]
+#
+#            phidp_f = phidp_f1 - phidp_f1[0]
+#
+#            #Check for all-nan array, go to next iteration of loop if so
+#            if np.sum(np.isfinite(phidp_f)==True)==0:
+#                continue
+#            
+#            #Find minimum value of PhiDP
+#            phi1_valid = (np.nonzero(np.isfinite(phidp_f)))[0]
+#            if phi1_valid.size != 0:
+#                phi1 = phi1_valid[0]
+#            else:
+#                continue
+#            #Find indices where PhiDP is between 4 and 6 degs    
+#            ind = np.where(np.logical_and(phidp_f > 4, phidp_f < 6))[0]
+#
+#            #If values exist, 
+#            if ind.size != 0:
+#                #Find the index of the maximum value of PhiDP between 4 and 6
+#                ib = np.where(phidp_f==max(phidp_f[ind]))[0][0]
+#                #print '1. index and value of maximum phidp_f between 4&6=', ib, phidp_f[ib]
+#
+#                pdpmax = phidp_f[ib]
+#                path_len = rg[ib]
+#                #print '2. maxmimum phidp=', pdpmax, 'Path length=', path_len
+#
+#                #if path of significant returns exceeds min_path
+#                #if np.logical_and(path_len > min_path, pdpmax > 4):
+#                if path_len > min_path:
+#                    #print '3.', con1
+#                    #print "step1"
+#                    #plt.plot(zdr_f[0:ib+1])
+#
+#                    #exclude rays with any bad pixels (heavy rain (mie-scattering))
+##                    ind = zdr_f[0:ib+1] > ZDRmax
+#                    ind = zdr_f[phi1:ib+1] > ZDRmax
+#                    #print '4.', np.sum(ind) < 1
+#
+#                    if np.sum(ind) < 1:
+#                        #plt.plot(rhohv_f[0:ib+1])
+#                        #print "step2"
+#
+#                        #exclude rays where 3 or more values of RhoHV are less than 0.98, i.e. not rain
+#                        #ind = rhohv_f[0:ib+1] < 0.98
+#                        ind = np.logical_and(rhohv_f > 0.0, rhohv_f < 0.98)
+#                        #print '5.', np.sum(ind) < 3
+#                        #print uzh_f[0:10]
+#                        #print uzh_f_all[0,0:10]
+#                        #if np.sum(ind) < 3:   
+#
+##                        if np.sum(ind[0:ib+1]) < 3:   
+#                        if np.sum(ind[phi1:ib+1]) < 3:   
+#                            #print i
+#                            #index of good rays (value from 0 to 4320)
+#                            ray_index[file,i] = i
+#                            ray_az[file,i] = rad.azimuth['data'][i]
+#                            ray_el[file,i] = rad.elevation['data'][i]
+#
+#                            #print i
+#                            uzh_f[ind] = np.nan
+#                            zdr_f[ind] = np.nan
+#                            #phidp_f[ind] = np.nan
+#                            #uphidp_sm_f[ind] = np.nan
+#			    #uphidp_sm_f.mask[ind] = np.nan
+#                            #rhohv_f[ind] = np.nan
+#
+#                            startphi[i] = np.nanmedian(uphidp_f[phi1:phi1+10])
+#
+#                            phiobs[i] = pdpmax
+#                            #phiobs_all[file,:] = phiobs
+#
+#                            #kdpest = 1e-05 * (11.74 - 4.020*zdr_f - 0.140*zdr_f**2 + 0.130*zdr_f**3)*10 ** (uzh_f/10)
+#                            kdpest = 1e-05 * (11.74 - 4.020*zdr_f[phi1:] - 0.140*zdr_f[phi1:]**2 + 0.130*zdr_f[phi1:]**3)*10 ** (uzh_f[phi1:]/10)
+#
+#                            tmpphi = np.nancumsum(kdpest)*rg_sp*2
+#
+#                            phiest[i] = tmpphi[ib]
+#                            #phiest[i] = tmpphi[ib-phi1]
+#
+#        #phiest is a function of ray, phiest(nrays)
+#        #phiest_all is a function of volume and ray, phiest_all(nvols,nrays)
+#        #delta is a function of ray, delta(nrays)
+#        #delta_all is a function of volume and ray, delta_all(nvols,nrays)
+#
+#       	phiobs_all[file,0:Tdim] = phiobs
+#       	phiest_all[file,0:Tdim] = phiest
+#       	startphi_all[file,0:Tdim] = startphi
+#
+#       	good_rays = np.sum(np.isfinite(phiest))
+#       	print('file=',file,'rays=',str(good_rays))
+#       	del rad
+#       	del zdr, rhohv, kdp, phidp, uzh, uphidp
+#       	gc.collect()
+#                    
+#        #print phiobs.shape   
+#        #delta = ((phiest-phiobs)/phiobs)*100
+#        #print delta.shape
+#        #print file
+#        #delta_all[file,:] = delta
+#        #print 'end'    
+#        #filename = outdir + 'file%03.d_phiest_phiobs_delta' %(file)
+#        #data_save=np.vstack((phiest,phiobs,delta))
+#        #np.save(filename,data_save)          
+#
+#    #filename = outdir + 'good_rays'     
+#    #np.save(filename,good_rays)
+#    print("total rays = ", np.sum(np.isfinite(phiest_all.flatten())))
+#    if np.sum(np.isfinite(phiest_all.flatten())) !=0:
+#        print("phiest and phiobs values exist")
+#        phiest_filename = os.path.join(outdir, 'phiest_all_' + day)
+#        np.save(phiest_filename,phiest_all)
+#        phiobs_filename = os.path.join(outdir, 'phiobs_all_' + day)
+#        np.save(phiobs_filename,phiobs_all)
+#        startphi_filename = os.path.join(outdir, 'startphi_all_' + day)
+#        np.save(startphi_filename,startphi_all)
+#        return True
+#    else:
+#        return False
+#
 #--------------------------------------------------------------------------------------------------------------------------
 def identify_first_phase_ray(data, mask, starting_gate, window_size, filter_size, end_gate_limit, missing_points=0):
     valid_data = np.where(np.logical_or(mask,
@@ -1007,7 +1007,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 #boundary layer scans are 1,3,5,7 etc
 
    # for file in range(nfiles):
-    for file in range(0,nfiles,2):
+    for file in range(1,nfiles,2):
         print(file)
 
         #Read file
@@ -1267,16 +1267,17 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
 
 
 #--------------------------------------------------------------------------------------------------------------------------
-def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
+def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr,scan_type):
     
-    filelist = glob.glob(datadir + date + '/*.nc')
+    filelist = glob.glob(datadir + date + '/' + scan_type + '/*.nc')
     filelist.sort()
     nfiles=len(filelist)
     
 #   T = np.zeros((nfiles))*np.nan
 #   num18 = np.zeros(nfiles)*np.nan
 #   stdZDR18  = np.zeros(nfiles)*np.nan
-    medZDR18  = np.zeros(nfiles)*np.nan
+#    medZDR18  = np.zeros(int(nfiles/2))*np.nan
+    medZDR18 =[]
     T_arr = []
 
     
@@ -1286,13 +1287,14 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
         rad=pyart.io.read(filelist[file])
 
         #Create time array
-        time = rad.metadata['start_datetime']
-        hh = float(time[11:13])
-        mm = float(time[14:16])
-        ss = float(time[17:19])
+        timeT = rad.metadata['start_datetime']
+        print(timeT)
+        hh = float(timeT[11:13])
+        mm = float(timeT[14:16])
+        ss = float(timeT[17:19])
 #        T[file] = hh + mm/60.0 + ss/3600.0
 
-       	T_arr.append(time)
+       	#T_arr.append(time)
 
         #Extract dimensions
         Rdim = rad.ngates
@@ -1326,6 +1328,7 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
             phidp[ind] = phidp[ind] - 360
             ind = phidp < -180
             phidp[ind] = phidp[ind] + 360
+            sqi = copy.deepcopy(rad.fields['SQI']['data'][az_index,:])
         except:
             print("Couldn't load all variables")    
             continue
@@ -1338,7 +1341,7 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
         beam_height = beam_height[az_index,:]
 
         #Extract melting layer height for the given radar scan time to use as a threshold on data selection
-        mlh, _ = extract_ml_zdr(time, ml_zdr)
+        mlh, _ = extract_ml_zdr(timeT, ml_zdr)
 
         zind = beam_height > mlh   
         uzh[zind==True] = np.nan    
@@ -1352,18 +1355,19 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr):
         phidp[:,0:3] = np.nan
         rhohv[:,0:3] = np.nan
 
-        ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>15, uzh<=18],axis=0)
+        ind=np.all([rhohv>0.99, sqi>0.3, phidp>0, phidp<6, uzh>15, uzh<=18],axis=0)
 #        ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>18, uzh<=21],axis=0)
  #       ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>21, uzh<=24],axis=0)
 #
         if ind.sum() >0:
 #           num18[file] = np.sum(ind==True)
 #           stdZDR18[file] = np.nanstd(zdr[ind==True])
-            medZDR18[file] = np.nanmedian(zdr[ind==True])
+       	    T_arr.append(timeT)
+            medZDR18.append(np.nanmedian(zdr[ind==True]))
 
        	del rad
         del zdr, rhohv, uzh, phidp
         gc.collect()
-    
+    print(T_arr) 
     return T_arr, medZDR18
 

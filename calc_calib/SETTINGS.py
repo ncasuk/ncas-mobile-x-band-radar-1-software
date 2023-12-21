@@ -1,5 +1,7 @@
 # Project Choice
 PROJ_NAME = 'woest'
+SCAN_TYPE = 'cloud_scans'
+#SCAN_TYPE = 'bl_scans'
 
 # LOTUS settings
 QUEUE = 'short-serial-4hr --account=short4hr'
@@ -21,7 +23,7 @@ SCRIPT_DIR = f'/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1
 
 #Location for LOTUS output
 LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
-LOTUS_DIR = f'{LOTUS_OUTPUT_PATH_BASE}/cals/'
+LOTUS_DIR = f'{LOTUS_OUTPUT_PATH_BASE}/cals/nxpol1/{SCAN_TYPE}/'
 
 #Location of weather station text files with daily rain amounts
 #WXDIR = f'/gws/nopw/j04/ncas_obs/amf/raw_data/ncas-aws-2/incoming/{PROJ_NAME}/NOAA/'
@@ -41,7 +43,7 @@ ZDR_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_
 
 #Location of output of Z data for calibration
 #Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/'
-Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/cloud_scans/'
+Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/{SCAN_TYPE}/'
 
 #Location of phi files 
 PHI_DIR = Z_CALIB_DIR+'phi_files/'
@@ -50,4 +52,7 @@ PHI_DIR = Z_CALIB_DIR+'phi_files/'
 # tuples.The first tuple of each pair is the start and stop elevation 
 # of the segment to exclude. The second tuple contains the start and 
 # stop azimuth of the segment to exclude.
-EXCLUSIONS = [((0,90.1),(307,321))]
+#Cloud Scans
+EXCLUSIONS = [((0,1.6),(307,321))]
+#BL scans
+#EXCLUSIONS = [((1.4,1.6),(307,321)),((0,1.1),(0,360))]

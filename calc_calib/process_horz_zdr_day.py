@@ -7,6 +7,7 @@ import dateutil.parser as dp
 import re
 import SETTINGS
 from utilities import calib_functions
+import datetime as dt
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -48,8 +49,10 @@ def process_volume_scans(args):
     inputdir = SETTINGS.VOLUME_DIR
     #But only using dates in the ZDR directory, which are ones we know have rain
     zdr_dir = SETTINGS.ZDR_CALIB_DIR
+    #scan type sub directory
+    scan_type = SETTINGS.SCAN_TYPE
     #Create subdirectory of ZDR directory for output data
-    outdir = f'{zdr_dir}/horz/'
+    outdir = f'{zdr_dir}/horz/{scan_type}/'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
@@ -60,13 +63,16 @@ def process_volume_scans(args):
 
     if os.path.exists(mlfile):
         ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
-    
+        #print(ml_zdr) 
         if ml_zdr.empty==False:
-            T, medZDR18 = calib_functions.horiz_zdr(inputdir, date, outdir, ml_zdr, zcorr)
+        #ml_zdr=[]
+            T, medZDR18 = calib_functions.horiz_zdr(inputdir, date, outdir, ml_zdr, zcorr,scan_type)
+            #print(T)
             T2 = pd.to_datetime(T)
             T2=T2.tz_convert(None)
             output = pd.DataFrame({'ZDR' : medZDR18}, index=T2)
-            filename = f'{outdir}/{date}_horz_zdr_15-18dbz.csv'
+            timestamp=dt.datetime.now().strftime("%Y%m%d-%H%M")
+            filename = f'{outdir}/{date}_horz_zdr_{timestamp}.csv'
             output.to_csv(filename)
 
 def main():

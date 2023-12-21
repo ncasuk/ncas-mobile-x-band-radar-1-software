@@ -33,7 +33,7 @@ def arg_parse():
                         type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
     parser.add_argument('-p','--make_plots',nargs=1, required=True, default=0, type=int,
-                        help=f'Make plots for whole time series if p is set to 1 or each day if p is 2',metavar='')
+                        help=f'Make plots for whole time series if p is set to 2 or each day if p is 1',metavar='')
     
     return parser.parse_args()
 
@@ -55,17 +55,19 @@ def plot_zdr(args):
   
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
+
+    scan_type = SETTINGS.SCAN_TYPE
  
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
-    outdir = os.path.join(SETTINGS.ZDR_CALIB_DIR,'horz/15-18/')
+    outdir = os.path.join(SETTINGS.ZDR_CALIB_DIR,f'horz/{scan_type}/')
     all_data=pd.DataFrame()
    
     pattern = re.compile(r'(\d{8})')
     files = [x for x in os.listdir(outdir) if pattern.match(x)]
     files.sort()
-    
+    #print(files)
     for file_ in files:
 #    filelist = glob.glob(outdir + '*.csv')
 #    filelist.sort()
@@ -74,10 +76,11 @@ def plot_zdr(args):
         date = file_[0:8]
         print(date)
         data = pd.read_csv(os.path.join(outdir,file_),index_col=0, parse_dates=True)
-        data = data.iloc[0::2,:]
+        data=data.dropna()
+#        data = data.iloc[0::2,:]
 #        print(data)
         all_data = pd.concat([all_data, data])
-        outfile=f'{outdir}/all_cloud_scan_data.csv'
+        outfile=f'{outdir}/all_{scan_type}_data.csv'
         all_data.to_csv(outfile)    
 
         if plot==1:
@@ -93,7 +96,7 @@ def plot_zdr(args):
             img_dir=os.path.join(outdir,'images')
             if not os.path.exists(img_dir):
                 os.makedirs(img_dir)
-            img_name = f'{img_dir}/'+date+'_horz_zdr_15-18_cloud_scans.png'
+            img_name = f'{img_dir}/'+date+f'_horz_zdr_{scan_type}.png'
             #img_name = f'{img_dir}/'+date+'_horz_zdr_15-18_BL_scans.png'
             print('Saving single day',img_name)
             plt.savefig(img_name,dpi=150)
@@ -101,13 +104,25 @@ def plot_zdr(args):
 
     if plot==2:         
         median_bias=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
+        mean_bias=np.nanmean(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
+        std_bias=np.nanstd(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
         print('Median Bias for whole period = ',median_bias)
+        print('Mean Bias for whole period = ',mean_bias)
+        print('Standard Deviation for whole period = ',std_bias)
         zdr_med = all_data.resample('D').median()
+        zdr_mean = all_data.resample('D').mean()
         zdr_std = all_data.resample('D').std()
 
         plt.figure(figsize=(15,8))
-        plt.errorbar(zdr_med.index,zdr_med['ZDR'],yerr=zdr_std['ZDR'],color='black',fmt='o',
+        #plt.errorbar(zdr_med.index,zdr_med['ZDR'],yerr=zdr_std['ZDR'],color='black',fmt='o',
+        #         markersize='6', elinewidth=2,capsize=4)
+        plt.errorbar(zdr_mean.index,zdr_mean['ZDR'],yerr=zdr_std['ZDR'],color='black',fmt='o',
                  markersize='6', elinewidth=2,capsize=4)
+        plt.plot(zdr_med.index,zdr_med['ZDR'],'rx',markersize='6')
+        plt.plot([start_date_dt,end_date_dt],[mean_bias,mean_bias],'r-')
+        plt.plot([start_date_dt,end_date_dt],[mean_bias-std_bias,mean_bias-std_bias],'g--')
+        plt.plot([start_date_dt,end_date_dt],[mean_bias+std_bias,mean_bias+std_bias],'g--')
+
         plt.yticks(size=12)
         plt.xticks(size=12)
         plt.grid()
@@ -116,7 +131,7 @@ def plot_zdr(args):
         plt.xticks(rotation=90)
         plt.ylim([-1, 1])
         plt.xlim([start_date_dt,end_date_dt])
-        title_str = 'Median Bias for whole period = ' + str(median_bias)
+        title_str = 'Mean, Std and Median Bias for whole period = ' + str(round(mean_bias,2)) + '+/- ' + str(round(std_bias,2)) + ', '+ str(round(median_bias,2))
         plt.title(title_str) 
         plt.ylabel('Horizontal ZDR Bias (dB)', fontsize=18)
         plt.xlabel('Date', fontsize=18)
@@ -127,7 +142,7 @@ def plot_zdr(args):
         if not os.path.exists(img_dir):
             os.makedirs(img_dir)
         #Save plot
-        img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_15-18_cloud_scans.png'
+        img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_{scan_type}.png'
         #img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_15-18_BL_scans.png'
         print('Saving time series',img_name)
         plt.savefig(img_name,dpi=150)

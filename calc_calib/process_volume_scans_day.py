@@ -56,7 +56,7 @@ def process_volume_scans(args):
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    rh = DataBaseHandler(table_name="process_vol_scans")
+    rh = DataBaseHandler(table_name="process_vol_scans_nxpol1_bl_scans")
 
     identifier = f'{date}'
 
