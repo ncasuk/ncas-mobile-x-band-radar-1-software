@@ -94,7 +94,8 @@ def plot_zdr(args):
                     plt.grid()
                     plt.ylabel('ZDR Bias (dB)', fontsize=18)
                     plt.xlabel('Time (UTC)', fontsize=18)
-                    plt.title('Median ZDR ', zdr_day_avg1['ZDR'][0],' +/- ', zdr_std1['ZDR'][0])
+                    #plt.title('Median ZDR ', zdr_day_avg1['ZDR'][0],' +/- ', zdr_std1['ZDR'][0])
+                    plt.title('Median ZDR ' + str(np.round(zdr_day_avg1['ZDR'][0],1)) + '$\pm$' + str(np.round(zdr_std1['ZDR'][0],1)))
                     timeFmt = mdates.DateFormatter('%H')
                     ax1.xaxis.set_major_formatter(timeFmt)
                     img_name = f'{outdir}/images/{date}_zdr.png'
@@ -168,7 +169,6 @@ def plot_zdr(args):
         plt.plot(all_data_median.index,all_data_median['ZDR'],'go')
 
         plt.plot([start_date_dt,end_date_dt],[all_data_overall_mean['ZDR'],all_data_overall_mean['ZDR']],'g-')
-
 
         plt.yticks(size=16)
         plt.xticks(size=16)

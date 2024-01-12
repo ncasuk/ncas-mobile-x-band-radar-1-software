@@ -32,6 +32,8 @@ def arg_parse():
     parser.add_argument('-e', '--end_date', nargs='?', default=SETTINGS.MAX_END_DATE,
                         type=str, help=f'End date string in format YYYYMMDD, between '
                         f'{SETTINGS.MIN_START_DATE} and {SETTINGS.MAX_END_DATE}', metavar='')
+    parser.add_argument('-t', '--scan_type', nargs='?', 
+                        type=str, help=f'Type of scan bl_scans or cloud_scans')
     
     return parser.parse_args()
 
@@ -52,12 +54,15 @@ def plot_zcalib(args):
   
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
+
+    scan_type=args.scan_type
  
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
-    phi_dir = os.path.join(SETTINGS.PHI_DIR)
-    img_dir = os.path.join(SETTINGS.Z_CALIB_DIR,'images/')
+    zdir = SETTINGS.Z_CALIB_DIR
+    phi_dir = f'{zdir}/{scan_type}/phi_files/'
+    img_dir = f'{zdir}/{scan_type}/images/')
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
     filelist1 = glob.glob(phi_dir+"phiest*")

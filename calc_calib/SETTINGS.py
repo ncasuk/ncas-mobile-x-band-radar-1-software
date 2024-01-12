@@ -1,8 +1,16 @@
 # Project Choice
 PROJ_NAME = 'woest'
+#Cloud Scans
 SCAN_TYPE = 'cloud_scans'
+EXCLUSIONS = [((0,1.6),(307,321))]
+#BL scans
 #SCAN_TYPE = 'bl_scans'
+#EXCLUSIONS = [((1.4,1.6),(307,321)),((0,1.1),(0,360))]
 
+# Exclusions is a list of tuples (), where each tuple is a pair of 
+# tuples.The first tuple of each pair is the start and stop elevation 
+# of the segment to exclude. The second tuple contains the start and 
+# stop azimuth of the segment to exclude.
 # LOTUS settings
 QUEUE = 'short-serial-4hr --account=short4hr'
 MAX_RUNTIME = '04:00:00'
@@ -43,16 +51,9 @@ ZDR_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_
 
 #Location of output of Z data for calibration
 #Z_CALIB_DIR = '/gws/nopw/j04/ncas_radar_vol2/data/xband/'+PROJ_NAME+'/calibrations/Zcalib/'
-Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/{SCAN_TYPE}/'
+Z_CALIB_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/calibrations/Zcalib/'
 
 #Location of phi files 
 PHI_DIR = Z_CALIB_DIR+'phi_files/'
 
-# Exclusions is a list of tuples (), where each tuple is a pair of 
-# tuples.The first tuple of each pair is the start and stop elevation 
-# of the segment to exclude. The second tuple contains the start and 
-# stop azimuth of the segment to exclude.
-#Cloud Scans
-EXCLUSIONS = [((0,1.6),(307,321))]
-#BL scans
-#EXCLUSIONS = [((1.4,1.6),(307,321)),((0,1.1),(0,360))]
+

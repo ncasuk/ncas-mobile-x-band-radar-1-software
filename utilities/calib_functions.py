@@ -19,6 +19,7 @@ from scipy import signal
 
 plt.switch_backend('agg')
 
+warnings.filterwarnings("ignore", category=UserWarning) 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
@@ -62,7 +63,7 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
         #print(max_gate) 
 
        	try:
-            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'])
+            rhohv = copy.deepcopy(rad.fields['RhoHVu']['data'])
             rhohv[rhohv.mask]=np.nan
             rhohv=rhohv.data
             uzh = copy.deepcopy(rad.fields['dBuZ']['data'])
@@ -72,10 +73,10 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
             zdru[zdru.mask]=np.nan
             zdru=zdru.data
             #RV for radial velocity
-            rv = copy.deepcopy(rad.fields['V']['data'])
+            rv = copy.deepcopy(rad.fields['Vu']['data'])
             rv[rv.mask]=np.nan
             rv=rv.data
-            rv2 = copy.deepcopy(rad.fields['V']['data'])
+            rv2 = copy.deepcopy(rad.fields['Vu']['data'])
             rv2[rv2.mask]=np.nan
             rv2=rv2.data
 
@@ -1003,11 +1004,7 @@ def calibrate_day_att(raddir, outdir, day, ml_zdr):
     ray_el = np.zeros((nfiles,ss))*np.nan
 
 
-#cloud scans are files 0,2,4,6 etc
-#boundary layer scans are 1,3,5,7 etc
-
-   # for file in range(nfiles):
-    for file in range(1,nfiles,2):
+    for file in range(nfiles):
         print(file)
 
         #Read file
@@ -1321,8 +1318,8 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr,scan_type):
 
             uzh = copy.deepcopy(rad.fields['dBuZ']['data'][az_index,:])#[rad.sweep_start_ray_index['data'][0]]
             uzh = uzh + zcorr
-            zdr = copy.deepcopy(rad.fields['ZDR']['data'][az_index,:])
-            rhohv = copy.deepcopy(rad.fields['RhoHV']['data'][az_index,:])
+            zdr = copy.deepcopy(rad.fields['ZDRu']['data'][az_index,:])
+            rhohv = copy.deepcopy(rad.fields['RhoHVu']['data'][az_index,:])
             phidp = copy.deepcopy(rad.fields['PhiDP']['data'][az_index,:])
             ind = phidp > 180
             phidp[ind] = phidp[ind] - 360
@@ -1348,18 +1345,20 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr,scan_type):
         zdr[zind==True] = np.nan
         phidp[zind==True] = np.nan
         rhohv[zind==True] = np.nan
+        sqi[zind==True] = np.nan
 
         #Set first three range gates to NaN
         uzh[:,0:3] = np.nan
         zdr[:,0:3] = np.nan
         phidp[:,0:3] = np.nan
         rhohv[:,0:3] = np.nan
+        sqi[:,0:3] = np.nan
 
         ind=np.all([rhohv>0.99, sqi>0.3, phidp>0, phidp<6, uzh>15, uzh<=18],axis=0)
 #        ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>18, uzh<=21],axis=0)
  #       ind=np.all([rhohv>0.99, phidp>0, phidp<6, uzh>21, uzh<=24],axis=0)
 #
-        if ind.sum() >0:
+        if ind.sum() >10:
 #           num18[file] = np.sum(ind==True)
 #           stdZDR18[file] = np.nanstd(zdr[ind==True])
        	    T_arr.append(timeT)

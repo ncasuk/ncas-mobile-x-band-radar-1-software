@@ -47,16 +47,19 @@ def process_volume_scans(args):
 
     #Directory for input radar data
     inputdir=SETTINGS.VOLUME_DIR
+    #scan type sub directory
+    scan_type = SETTINGS.SCAN_TYPE
 
     #Directory for zdr_ml data
     zdrdir=SETTINGS.ZDR_CALIB_DIR
 
     #Directory for output calibration data
-    outdir=SETTINGS.Z_CALIB_DIR
+    zdir=SETTINGS.Z_CALIB_DIR
+    outdir= f'{zdir}/{scan_type}'
     if not os.path.exists(outdir):
         os.makedirs(outdir)
 
-    rh = DataBaseHandler(table_name="process_vol_scans_nxpol1_bl_scans")
+    rh = DataBaseHandler(table_name=f'process_vol_scans_nxpol1_{scan_type}')
 
     identifier = f'{date}'
 
@@ -70,7 +73,7 @@ def process_volume_scans(args):
         if os.path.exists(mlfile):
             print("found ml file, processing data")
             ml_zdr = pd.read_csv(mlfile,index_col=0, parse_dates=True)
-            raddir = os.path.join(inputdir, date)
+            raddir = os.path.join(inputdir, date, scan_type)
             #print raddir, outdir, date
             if calib_functions.calibrate_day_att(raddir, outdir, date, ml_zdr):
                 rh.insert_success(identifier)
