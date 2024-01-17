@@ -72,6 +72,7 @@ def process_volume_scans(args):
             T2=T2.tz_convert(None)
             output = pd.DataFrame({'ZDR' : medZDR18}, index=T2)
             timestamp=dt.datetime.now().strftime("%Y%m%d-%H%M")
+            #filename = f'{outdir}/{date}_horz_zdr_no1point5{timestamp}.csv'
             filename = f'{outdir}/{date}_horz_zdr_{timestamp}.csv'
             output.to_csv(filename)
 

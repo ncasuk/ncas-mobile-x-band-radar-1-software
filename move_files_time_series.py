@@ -55,7 +55,7 @@ def loop_over_days(args):
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
     #list only date directories
-    inputdir = SETTINGS.VOLUME_DIR
+    inputdir = "/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/woest/cfradial/processed_v1/sur/"
  
     pattern = re.compile(r'(\d{8})')
     proc_dates = [x for x in os.listdir(inputdir) if pattern.match(x)]

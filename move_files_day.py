@@ -10,7 +10,7 @@ import sys
 sys.path.insert(1, '/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1/calc_calib/')
 import SETTINGS
 
-basedir = '/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/woest/cfradial/uncalib_v1/sur/'
+basedir = '/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/woest/cfradial/processed_v1/sur/'
 
 def arg_parse_day():
     """
@@ -32,8 +32,6 @@ def move_files(args):
     
     :param args: (namespace) Namespace object built from arguments parsed from command line
     """
-
-    basedir=SETTINGS.VOLUME_DIR
 
     day=args.date[0]
     print('Processing ',day)

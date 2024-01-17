@@ -239,9 +239,9 @@ def process_zdr_scans(outdir,raddir,date,file,plot):
 
         #Create image filename 
         img_name = os.path.join(outdir,date,'vert_profs_' + daystr + '_' + timestr + '.png') 
-        if os.path.exists(img_name):
-            print('File already processed, image created')
-            continue
+        #if os.path.exists(img_name):
+        #    print('File already processed, image created')
+        #    continue
 
         #Count the number of data points
         nvals[F] = len(ind_rain)
@@ -586,7 +586,7 @@ def calc_hourly_ML(outdir,date):
             #ml_zdr=data[['MLB','ZDR']].between_time(beg,end,include_end=False)
             ml_zdr=data[['MLB','ZDR']].between_time(beg,end,inclusive='left')
         
-            #If there are less than 3 (out of 9) valid values, set all to NaN and continue
+            #If there are less than 3 (out of 6) valid values, set all to NaN and continue
             #Else calculate median value of melting layer height and ZDR
             if ml_zdr['MLB'].count()<3:
                 hourly_ml[hh]=float('nan')
@@ -1325,7 +1325,7 @@ def horiz_zdr(datadir, date, outdir, ml_zdr, zcorr,scan_type):
             phidp[ind] = phidp[ind] - 360
             ind = phidp < -180
             phidp[ind] = phidp[ind] + 360
-            sqi = copy.deepcopy(rad.fields['SQI']['data'][az_index,:])
+            sqi = copy.deepcopy(rad.fields['SQIu']['data'][az_index,:])
         except:
             print("Couldn't load all variables")    
             continue

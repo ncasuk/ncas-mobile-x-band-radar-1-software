@@ -21,26 +21,32 @@ def arg_parse_chunk():
     """
 
     parser = argparse.ArgumentParser()
-    type_choices = ['sur', 'rhi']
+    geom_choices = ['sur', 'rhi']
+#   type_choices = ['bl_scans', 'cloud_scans']
 
-    parser.add_argument('-p', '--params_index', nargs=1, required=True, type=str, 
-                        help=f'Index for params file given as an integer', metavar='')
+#    parser.add_argument('-p', '--params_index', nargs=1, required=True, type=str, 
+#                       help=f'Index for params file given as an integer', metavar='')
     parser.add_argument('-f', '--files', nargs='+', required=True,
                         help=f'List of files to process', metavar='')
-    parser.add_argument('-t', '--scan_type', nargs=1, type=str,
-                        choices=type_choices, required=True,
-                        help=f'Type of scan, one of: {type_choices}',metavar='')
+    parser.add_argument('-g', '--scan_geom', nargs=1, type=str,required=True,metavar='',
+                        help=f'Type of scan, one of: {geom_choices}')
+#    parser.add_argument('-t', '--scan_type', nargs=1, type=str,required=True,metavar=''
+#                        help=f'Type of scan, one of: {type_choices}',metavar='')
+    parser.add_argument('-n', '--table_name', nargs=1, type=str, required=True,metavar='')
     
     return parser.parse_args()
 
 
 def loop_over_files(args):
 
-    params_index = args.params_index[0]
-    params_file = f'{SETTINGS.PARAMS_FILE}{params_index}'
+#    params_index = args.params_index[0]
+    #params_file = f'{SETTINGS.PARAMS_FILE}'
+    params_file = f'{SETTINGS.PARAMS_FILE_RHI}'
     input_files = args.files
     print("input_files= ",input_files)
-    scan_type = args.scan_type[0]
+    scan_geom = args.scan_geom[0]
+#    scan_type = args.scan_type[0]
+    table = args.table_name[0]
 
     failure_count=0
 
@@ -52,6 +58,7 @@ def loop_over_files(args):
 
         print("ncfile= ",ncfile)
         fname = os.path.basename(ncfile)
+        fname=fname[:27] + 'mod-' + fname[27:]
         ncdate = os.path.basename(ncfile).split('_')[2].replace('-','')
     
         YYYY=ncdate[0:4]
@@ -59,7 +66,7 @@ def loop_over_files(args):
         DD=ncdate[6:8]
         date=ncdate[0:8]
 
-        rh = DataBaseHandler(table_name="apply_calib_rhi")
+        rh = DataBaseHandler(table_name=table)
         identifier = f'{ncdate}'
 
         #If there is a success identifier, continue to next file in the loop
@@ -93,9 +100,7 @@ def loop_over_files(args):
             continue
     
         #this line looks for the file generated from uncalib_v1 in calib_v1.
-        expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_type}/{date}/{fname}'
-    
-        #print expected_file
+        expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_geom}/{date}/{fname}'
         print("[INFO] Checking that the output file has been produced.")
         #Read input uncalibrated netcdf file and extract list of variables
         try:

@@ -6,6 +6,9 @@ import pandas as pd
 import dateutil
 import dateutil.parser as dp
 import argparse
+import datetime as dt
+from datetime import timedelta
+from matplotlib.dates import (MO,TU,WE,TH,FR,SA,SU)
 
 import warnings
 import glob
@@ -55,7 +58,8 @@ def plot_zdr(args):
 
     start_date_dt = dp.parse(start_date) 
     end_date_dt = dp.parse(end_date) 
-  
+    print(start_date_dt,end_date_dt) 
+ 
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
  
@@ -81,6 +85,8 @@ def plot_zdr(args):
             file2 = os.path.join(outdir,date,'hourly_ml_zdr.csv')
             if os.path.exists(file1):
                 data1 = pd.read_csv(file1,index_col=0, parse_dates=True)
+                data1=data1.dropna()
+                data1=data1[np.isfinite(data1)]
                 zdr_day_avg1 = data1.resample('D').median()
                 zdr_std1 = data1.resample('D').std()
 
@@ -107,13 +113,16 @@ def plot_zdr(args):
 
             if os.path.exists(file2):
                 data2 = pd.read_csv(file2,index_col=0, parse_dates=True)
+                data2=data2[np.isfinite(data2)]
                 all_hourly_data = pd.concat([all_hourly_data, data2])
                 zdr_day_avg2 = all_hourly_data.resample('D').mean()
                 zdr_std2 = all_hourly_data.resample('D').std()
 
-          
-    median_bias=np.nanmedian(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
-    print('Median Bias for whole period (from hourly data) = ',median_bias) 
+    Med1=np.nanmedian(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
+    Mean1=np.nanmean(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
+    Std1=np.nanstd(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR'])      
+    #median_bias=np.nanmedian(all_hourly_data.loc[start_date_dt:end_date_dt]['H_ZDR']) 
+#    print('Median Bias for whole period (from hourly data) = ',median_bias) 
     #(3) Make a plot showing time series of ZDR for chosen period
     
     if plot==2:    
@@ -155,29 +164,52 @@ def plot_zdr(args):
     #make plot of all ZDR values i.e. every timestep
     if plot==3:
 
-        all_data_mean=all_data.resample('D').mean()
-        all_data_median=all_data.resample('D').median()
-        all_data_std=all_data.resample('D').std()
+        x1=start_date_dt+timedelta(days=-1)
+        x2=end_date_dt+timedelta(days=1)
 
-        all_data_overall_median=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
-        all_data_overall_mean=np.nanmean(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
-        all_data_overall_std=np.nanstd(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+        daily_mean=all_data.resample('D').mean()
+        daily_median=all_data.resample('D').median()
+        daily_std=all_data.resample('D').std()
+
+        overall_median=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+        overall_mean=np.nanmean(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
+        overall_std=np.nanstd(all_data.loc[start_date_dt:end_date_dt]['ZDR']) 
 
         fig,ax1=plt.subplots(figsize=(15,8))
-        plt.plot(all_data.index,all_data['ZDR'],'kx')
-        plt.plot(all_data_mean.index,all_data_mean['ZDR'],'ro')
-        plt.plot(all_data_median.index,all_data_median['ZDR'],'go')
+        plt.plot(all_data.index,all_data['ZDR'],'kx',label='All data')
+        plt.plot(daily_mean.index,daily_mean['ZDR'],'ro',label='Daily mean')
+        plt.plot(daily_median.index,daily_median['ZDR'],'go',label='Daily median')
 
-        plt.plot([start_date_dt,end_date_dt],[all_data_overall_mean['ZDR'],all_data_overall_mean['ZDR']],'g-')
+        plt.plot([x1,x2],[overall_mean,overall_mean],'g-',label='Mean of all values')
+        plt.plot([x1,x2],[overall_mean+overall_std,overall_mean+overall_std],'g-.',label='Std of all values')
+        plt.plot([x1,x2],[overall_mean-overall_std,overall_mean-overall_std],'g-.')
+        plt.plot([x1,x2],[Mean1,Mean1],'g--',label='Mean of hourly values')
+        plt.plot([x1,x2],[overall_median,overall_median],'r-',label='Median of all values')
+        plt.plot([x1,x2],[Med1,Med1],'r--',label='Median of hourly values')
+
+        plt.legend()
 
         plt.yticks(size=16)
         plt.xticks(size=16)
+        plt.xticks(rotation=90)
         plt.grid()
+        plt.xlim(x1,x2)
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%y'))
+        plt.gca().xaxis.set_major_locator(mdates.WeekdayLocator(interval=1,byweekday=MO))
+        plt.gca().xaxis.set_minor_locator(mdates.DayLocator(interval=1))
+
         plt.ylabel('ZDR Bias (dB)', fontsize=18)
         plt.xlabel('Date', fontsize=18)
-        plt.xlim([start_date_dt,end_date_dt])
-        monthyearFmt = mdates.DateFormatter('%d-%m-%y')
-        ax1.xaxis.set_major_formatter(monthyearFmt)
+ 
+        title_str= 'Mean, Std, Median of all values = '\
+                +str(round(overall_mean,2))+'+/-'+str(round(overall_std,2))\
+                +', '+str(round(overall_median,2))\
+                + '\nMean, Std, Median of all hourly values = '\
+                +str(round(Mean1,2)) + '+/-'+str(round(Std1,2))\
+                +', '+str(round(Med1,2))
+    
+        plt.title(title_str)
+        plt.tight_layout()
         img_name = f'{outdir}/images/{start_date}_{end_date}_every_zdr.png'
         print('Saving ',img_name)
         plt.savefig(img_name,dpi=150)

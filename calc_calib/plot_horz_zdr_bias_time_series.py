@@ -52,7 +52,8 @@ def plot_zdr(args):
 
     start_date_dt = dp.parse(start_date) 
     end_date_dt = dp.parse(end_date) 
-  
+    print(start_date_dt,end_date_dt)
+ 
     min_date = dp.parse(SETTINGS.MIN_START_DATE)
     max_date = dp.parse(SETTINGS.MAX_END_DATE)
 
@@ -61,7 +62,7 @@ def plot_zdr(args):
     if start_date_dt < min_date or end_date_dt > max_date:
         raise ValueError(f'Date must be in range {SETTINGS.MIN_START_DATE} - {SETTINGS.MAX_END_DATE}')
 
-    outdir = os.path.join(SETTINGS.ZDR_CALIB_DIR,f'horz/{scan_type}/')
+    outdir = os.path.join(SETTINGS.ZDR_CALIB_DIR,f'horz/{scan_type}/all_elevations/')
     all_data=pd.DataFrame()
    
     pattern = re.compile(r'(\d{8})')
@@ -81,6 +82,7 @@ def plot_zdr(args):
 #        print(data)
         all_data = pd.concat([all_data, data])
         outfile=f'{outdir}/all_{scan_type}_data.csv'
+        #outfile=f'{outdir}/all_{scan_type}_data_no1point5.csv'
         all_data.to_csv(outfile)    
 
         if plot==1:
@@ -97,12 +99,13 @@ def plot_zdr(args):
             if not os.path.exists(img_dir):
                 os.makedirs(img_dir)
             img_name = f'{img_dir}/'+date+f'_horz_zdr_{scan_type}.png'
-            #img_name = f'{img_dir}/'+date+'_horz_zdr_15-18_BL_scans.png'
+#            img_name = f'{img_dir}/'+date+f'_horz_zdr_{scan_type}_no1point5.png'
             print('Saving single day',img_name)
             plt.savefig(img_name,dpi=150)
             plt.close()
 
     if plot==2:         
+        
         median_bias=np.nanmedian(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
         mean_bias=np.nanmean(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
         std_bias=np.nanstd(all_data.loc[start_date_dt:end_date_dt]['ZDR'])
@@ -143,7 +146,7 @@ def plot_zdr(args):
             os.makedirs(img_dir)
         #Save plot
         img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_{scan_type}.png'
-        #img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_15-18_BL_scans.png'
+        #img_name = f'{img_dir}/{start_date}_{end_date}_horz_zdr_{scan_type}_no1point5.png'
         print('Saving time series',img_name)
         plt.savefig(img_name,dpi=150)
         plt.close()

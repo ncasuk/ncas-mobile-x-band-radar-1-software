@@ -1,11 +1,13 @@
 # Project Choice
 PROJ_NAME = 'woest'
 #Cloud Scans
-SCAN_TYPE = 'cloud_scans'
-EXCLUSIONS = [((0,1.6),(307,321))]
+#SCAN_TYPE = 'cloud_scans'
+#EXCLUSIONS = [((0,1.6),(307,321))]
+#EXCLUSIONS = [((0,1.6),(0,360))] #excluding the whole of the lowest scan, 1.5 degs
 #BL scans
-#SCAN_TYPE = 'bl_scans'
-#EXCLUSIONS = [((1.4,1.6),(307,321)),((0,1.1),(0,360))]
+SCAN_TYPE = 'bl_scans'
+EXCLUSIONS = [((1.4,1.6),(307,321)),((0,1.1),(0,360))]
+#EXCLUSIONS = [((1.4,1.6),(0,360)),((0,1.1),(0,360))]
 
 # Exclusions is a list of tuples (), where each tuple is a pair of 
 # tuples.The first tuple of each pair is the start and stop elevation 
