@@ -17,7 +17,7 @@ EST_RUNTIME = '01:00:00'
 
 # Where .out and .err files from LOTUS are output to
 LOTUS_OUTPUT_PATH_BASE = f'/home/users/lbennett/logs/lotus-output/{PROJ_NAME}'
-LOTUS_DIR = f'{LOTUS_OUTPUT_PATH_BASE}/cals/nxpol1/{SCAN_TYPE}/'
+LOTUS_DIR = f'{LOTUS_OUTPUT_PATH_BASE}/cals/nxpol1/'
 
 #LOCATION OF SCRIPTS
 SCRIPT_DIR = f'/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1/apply_calc/'
