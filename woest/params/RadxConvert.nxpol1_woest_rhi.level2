@@ -1720,7 +1720,7 @@ user_defined_global_attributes = {
   {
     name = "processing_software_version",
     attrType = ATTR_STRING,
-    val = "https://github.com/NCAR/lrose-core/tree/491d906"
+    val = "https://github.com/NCAR/lrose-core/tree/491d906, https://github.com/ncasuk/ncas-mobile-x-band-radar-1-software/releases/tag/v1.2.1"
   }
   ,
   {
