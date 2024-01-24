@@ -28,8 +28,8 @@ INPUT_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME
 OUTPUT_DIR = f'/gws/smf/j07/ncas_radar/data/ncas-mobile-x-band-radar-1/{PROJ_NAME}/level2/'
 
 #Location of params files
-PARAMS_FILE = f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.nxpol1_{PROJ_NAME}_sur.level2' 
-PARAMS_FILE_RHI = f'/home/users/lbennett/lrose/ingest_params/{PROJ_NAME}/RadxConvert.nxpol1_{PROJ_NAME}_rhi.level2' 
+PARAMS_FILE = f'/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1/woest/params/RadxConvert.nxpol1_{PROJ_NAME}_sur.level2' 
+PARAMS_FILE_RHI = f'/gws/pw/j07/ncas_obs_vol1/amf/software/ncas-mobile-x-band-radar-1/woest/params/RadxConvert.nxpol1_{PROJ_NAME}_rhi.level2' 
 
 CHUNK_HOURS=6
 
