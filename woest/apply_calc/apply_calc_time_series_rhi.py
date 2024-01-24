@@ -47,9 +47,7 @@ def loop_over_days(args):
     table = args.table_name[0]
 
     scan_geom = args.scan_geom[0]
-#    params_index = args.params_index[0]
     input_dir = os.path.join(SETTINGS.INPUT_DIR, scan_geom) 
-    #params_file = f'{SETTINGS.PARAMS_FILE}{params_index}'
 
     #How many files to process in each chunk. Approx 10 files each hour.   
     chunk_hours=SETTINGS.CHUNK_HOURS

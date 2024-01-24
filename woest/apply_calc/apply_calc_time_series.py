@@ -93,7 +93,7 @@ def loop_over_days(args):
     files.sort()
     print(files)
     
-    lotus_logs=f'{SETTINGS.LOTUS_DIR}{today}'    
+    lotus_logs=f'{SETTINGS.LOTUS_DIR}{scan_geom}/{today}'    
     if not os.path.exists(lotus_logs):
         os.makedirs(lotus_logs)
 

@@ -39,13 +39,15 @@ def arg_parse_chunk():
 
 def loop_over_files(args):
 
-#    params_index = args.params_index[0]
-    #params_file = f'{SETTINGS.PARAMS_FILE}'
-    params_file = f'{SETTINGS.PARAMS_FILE_RHI}'
+    scan_geom = args.scan_geom[0]
+
+    if scan_geom=='sur':
+        params_file = f'{SETTINGS.PARAMS_FILE}'
+    elif scan_geom=='rhi':
+        params_file = f'{SETTINGS.PARAMS_FILE_RHI}'
+
     input_files = args.files
     print("input_files= ",input_files)
-    scan_geom = args.scan_geom[0]
-#    scan_type = args.scan_type[0]
     table = args.table_name[0]
 
     failure_count=0
@@ -57,13 +59,8 @@ def loop_over_files(args):
                                  f'{SETTINGS.EXIT_AFTER_N_FAILURES}')
 
         print("ncfile= ",ncfile)
-        fname = os.path.basename(ncfile)
-        fname=fname[:27] + 'mod-' + fname[27:]
-        ncdate = os.path.basename(ncfile).split('_')[2].replace('-','')
+        ncdate = os.path.basename(ncfile).split('_')[2]
     
-        YYYY=ncdate[0:4]
-        MM=ncdate[4:6]
-        DD=ncdate[6:8]
         date=ncdate[0:8]
 
         rh = DataBaseHandler(table_name=table)
@@ -78,7 +75,7 @@ def loop_over_files(args):
         # Remove previous results for this file
         rh.delete_result(identifier)
 
-        #Read input uncalibrated netcdf file and extract list of variables
+        #Read input level1 netcdf file and extract list of variables
         try:
             rad1=pyart.io.read(ncfile, delay_field_loading=True)
         except IOError:
@@ -99,10 +96,12 @@ def loop_over_files(args):
             failure_count += 1
             continue
     
-        #this line looks for the file generated from uncalib_v1 in calib_v1.
-        expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_geom}/{date}/{fname}'
+        #this line looks for the file generated from level1 data in the output level2 folder
+        outfiles=os.listdir(f'{SETTINGS.OUTPUT_DIR}/{scan_geom}/{date}/')
+        fname = [s for s in outfiles if ncdate in s]
+        expected_file = f'{SETTINGS.OUTPUT_DIR}/{scan_geom}/{date}/{fname[0]}'
         print("[INFO] Checking that the output file has been produced.")
-        #Read input uncalibrated netcdf file and extract list of variables
+        #Read outputted level2 netcdf file and extract list of variables
         try:
             rad2=pyart.io.read(expected_file, delay_field_loading=True)
         except IOError:
@@ -116,7 +115,7 @@ def loop_over_files(args):
         print(f'[INFO] Found expected file {expected_file}')
 
         print(f'[INFO] Checking that the output variables match those in the input files')
-        #Checks that the variables in the calibrated nc file are identical to the variables in the uncalibrated input files
+        #Checks that the variables in the level2 nc file are identical to the variables in the level1 input files
         #If not, create a failure identifier called bad_vars
         keys_not_found=[]
         for key in input_vars:
